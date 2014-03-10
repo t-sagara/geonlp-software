@@ -1,0 +1,23 @@
+Quick Install:
+
+(1) execute './configure; make' to compile this program.
+
+(2) sudo and execute 'make install' to install executable
+  binaries and resources files.
+
+If some depended libraries are installed in custom directories,
+set LDFLAGS and LD_LIBRARY_PATH environmental variables and do
+configure.
+
+e.g.
+$ export LDFLAGS=-L/usr/local/lib/boost_1.44
+$ export LD_LIBRARY_PATH=/usr/local/lib/boost_1.44:/usr/local/lib
+$ ./configure
+...
+
+
+Generate and update the configure scripts:
+
+(1) edit configure.ac.
+
+(2) execute './autotool.sh' to create/update the configure scripts.

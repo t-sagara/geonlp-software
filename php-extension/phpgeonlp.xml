@@ -1,0 +1,435 @@
+<?xml version="1.0"?>
+
+<extension name="phpgeonlp" version="1.0.0">
+	<summary>PHP GeoNLP Morphologic Analyzer</summary>
+	
+	<deps language="cpp" platform="unix">
+		<with name="common">
+			<header name="iostream"/>
+			<header name="string"/>
+			<header name="vector"/>
+			<header name="map"/>
+			<header name="stdexcept"/>
+			<lib name="mecab" platform="unix"/>
+			<lib name="sqlite3" platform="unix"/>
+		</with>
+		<with name="boost_include" defaults="/usr/include:/usr/local/include:/usr/local/boost/include" testfile="boost/shared_ptr.hpp">
+			<header name="boost/shared_ptr.hpp" path="."/>
+		</with>
+		<with name="geonlp" defaults="../.." testfile="include/GeonlpService.h">
+			<header name="GeonlpService.h"/>
+			<header name="Node.h"/>
+			<header name="Exception.h"/>
+			<lib name="geonlp" platform="unix"/>
+		</with>
+	</deps>
+	
+	<code role="header" position="top">
+<![CDATA[
+        #include <php_version.h>
+        #if PHP_MINOR_VERSION > 3
+        #define function_entry zend_function_entry
+        #endif /* PHP_MINER_VERSION */
+	
+	#include <zend_exceptions.h>
+	/// @brief ServicePtr(shared_ptr)　を保持する、ラッパクラス
+	class ServiceWrapper {
+	
+	private:
+		
+		geonlp::ServicePtr _wrapped;
+		
+	public:
+	
+		ServiceWrapper(const std::string& profile);
+		ServiceWrapper();
+		~ServiceWrapper();
+		
+		inline geonlp::ServicePtr wrappedService() {
+			return _wrapped;
+		}
+
+		inline geonlp::MAPtr wrappedMA() {
+			return _wrapped->getMA();
+		}
+	};
+	
+	/// @brief Geowordオブジェクトから、zval構造体を生成する。
+	///
+	/// @param [in] gw Geowordオブジェクト
+	/// @param [out] obj zval構造体。object_init()で初期化してある必要がある。
+	static void _geowordToObject(const geonlp::Geoword& gw, zval* obj);
+]]>
+	</code>
+	
+	<code position="top">
+<![CDATA[
+	ServiceWrapper::ServiceWrapper(const std::string& profile) {
+		try {
+			_wrapped = geonlp::createService(profile);
+		} catch (geonlp::ServiceCreateFailedException& e) {
+		  	zend_throw_exception(zend_exception_get_default(TSRMLS_C), (char*)e.what(), 0 TSRMLS_CC);
+			// zend_error(E_ERROR, e.what());
+		}
+	}
+		
+	ServiceWrapper::ServiceWrapper() {
+		try {
+			_wrapped = geonlp::createService();
+		} catch (geonlp::ServiceCreateFailedException& e) {
+		  	zend_throw_exception(zend_exception_get_default(TSRMLS_C), (char*)e.what(), 0 TSRMLS_CC);
+			// zend_error(E_ERROR, e.what());
+		}
+	}
+		
+	ServiceWrapper::~ServiceWrapper() {
+		//
+	}
+		
+	void _geowordToObject(const geonlp::Geoword& gw, zval* obj) {
+		char buf[1025];
+
+                std::vector<std::string> keys = gw.get_keys();
+                for (std::vector<std::string>::iterator it = keys.begin(); it != keys.end(); it++) {
+		  std::string& key = *it;
+                  if (key == "dictionary_id" || key == "priority_score") { // int values
+		    add_property_long(obj, (char*)(key.c_str()), gw._get_int(key));
+                  } else if (key == "prefix" 
+		             || key == "suffix"
+                             || key == "prefix_kana"
+                             || key == "suffix_kana"
+                             || key == "hypernym") { // list of string
+                    std::vector<std::string> values = gw._get_string_list(key);
+                    zval* zarray;
+		    MAKE_STD_ZVAL(zarray);
+                    array_init(zarray);
+                    for (std::vector<std::string>::iterator it_string = values.begin(); it_string != values.end(); it_string++) {
+                      add_next_index_string(zarray, (*it_string).c_str(), 1);
+                    }
+                    add_property_zval(obj, (char*)(key.c_str()), zarray);
+                  } else if (key == "code") { // hash
+                    std::map<std::string, std::string> values = gw._get_string_map(key);
+		    zval* zarray;
+		    MAKE_STD_ZVAL(zarray);
+		    array_init(zarray);
+		    for (std::map<std::string, std::string>::iterator it_map = values.begin(); it_map != values.end(); it_map++) {
+                      add_assoc_string(zarray, (char*)((*it_map).first.c_str()), (char*)((*it_map).second.c_str()), 1);
+                    }
+		    add_property_zval(obj, (char*)(key.c_str()), zarray);
+		  } else { // string values
+                    add_property_string(obj, (char*)(key.c_str()), (char*)(gw._get_string(key).c_str()), 1);
+                  }
+                }
+		
+	}
+]]>
+	</code>
+	
+	<!-- *********************************** -->
+	<!-- PHP 上での Service クラス -->
+	<!-- *********************************** -->
+	<class name="GeonlpService" final="true">
+		<payload type="ServiceWrapper" alloc="no"/>
+		
+		<!-- コンストラクタ -->
+		<function name="__construct">
+			<proto>void __construct([string profile])</proto>
+			<code>
+<![CDATA[
+        if (ZEND_NUM_ARGS() == 0) {
+	  payload->data = new ServiceWrapper();
+        } else {
+          payload->data = new ServiceWrapper(profile);
+        }
+]]>
+			</code>
+		</function>
+		
+		<!-- デストラクタ -->
+		<function name="__destruct">
+			<proto>void __destruct()</proto>
+			<code>
+<![CDATA[
+	delete payload->data;
+]]>
+			</code>
+		</function>
+		
+                <!-- Service メソッド -->
+		<!-- version()　メソッド -->
+		<function name="version">
+			<proto>string version()</proto>
+			<code>
+<![CDATA[
+        std::string version = payload->data->wrappedService()->version();
+        RETURN_STRING(version.c_str(), 1);
+]]>
+			</code>
+		</function>
+
+		<!-- proc()　メソッド -->
+		<function name="proc">
+			<proto>string proc(string json_request_str)</proto>
+			<code>
+<![CDATA[
+        picojson::ext p(json_request_str);
+        picojson::value response = payload->data->wrappedService()->proc(picojson::value(p));
+        std::string json_response_str = response.serialize();
+        RETURN_STRING(json_response_str.c_str(), 1);
+]]>
+			</code>
+		</function>
+
+                <!-- MA メソッド -->
+		<!-- MAparse()　メソッド -->
+		<function name="MAparse">
+			<proto>string MAparse(string sentence)</proto>
+			<code>
+<![CDATA[
+	std::string ret;
+	try {
+		ret = payload->data->wrappedMA()->parse(sentence);
+	} catch (std::runtime_error& e) {
+		zend_throw_exception(zend_exception_get_default(TSRMLS_C), (char*)e.what(), 0 TSRMLS_CC);
+		// zend_error(E_ERROR, e.what());
+	}
+	RETURN_STRING(ret.c_str(), 1);
+]]>
+			</code>
+		</function>
+	
+		<!-- MAparseNode()　メソッド -->
+		<function name="MAparseNode">
+			<proto>array MAparseNode(string sentence)</proto>
+			<code>
+<![CDATA[
+	std::vector<geonlp::Node> ret;
+	try {
+	  payload->data->wrappedMA()->parseNode(sentence, ret);
+	} catch (std::runtime_error& e) {
+          zend_throw_exception(zend_exception_get_default(TSRMLS_C), (char*)e.what(), 0 TSRMLS_CC);
+          // zend_error(E_ERROR, e.what());
+	}
+	
+	const char* pbuf;
+	for (std::vector<geonlp::Node>::iterator it = ret.begin(); it != ret.end(); it++) {
+		zval* node;
+		MAKE_STD_ZVAL(node);
+		object_init(node);
+		
+		pbuf = it->get_surface().c_str();
+		add_property_string(node, "surface", (char*)pbuf, 1);
+		pbuf = it->get_partOfSpeech().c_str();
+		add_property_string(node, "partOfSpeech", (char*)pbuf, 1);
+		pbuf = it->get_subclassification1().c_str();
+		add_property_string(node, "subclassification1", (char*)pbuf, 1);
+		pbuf = it->get_subclassification2().c_str();
+		add_property_string(node, "subclassification2", (char*)pbuf, 1);
+		pbuf = it->get_subclassification3().c_str();
+		add_property_string(node, "subclassification3", (char*)pbuf, 1);
+		pbuf = it->get_conjugatedForm().c_str();
+		add_property_string(node, "conjugatedForm", (char*)pbuf, 1);
+		pbuf = it->get_conjugationType().c_str();
+		add_property_string(node, "conjugationType", (char*)pbuf, 1);
+		pbuf = it->get_originalForm().c_str();
+		add_property_string(node, "originalForm", (char*)pbuf, 1);
+		pbuf = it->get_yomi().c_str();
+		add_property_string(node, "yomi", (char*)pbuf, 1);
+		pbuf = it->get_pronunciation().c_str();
+		add_property_string(node, "pronunciation", (char*)pbuf, 1);
+		//
+		add_next_index_zval(return_value, node);
+	}
+]]>
+			</code>
+		</function>
+		
+		<!-- MAgetGeowordEntry()　メソッド -->
+		<function name="MAgetGeowordEntry">
+			<proto>object MAgetGeowordEntry(string geonlp_id)</proto>
+			<code>
+<![CDATA[
+	geonlp::Geoword gw;
+	try {
+		payload->data->wrappedMA()->getGeowordEntry(geonlp_id, gw);
+	} catch (std::runtime_error& e) {
+		zend_throw_exception(zend_exception_get_default(TSRMLS_C), (char*)e.what(), 0 TSRMLS_CC);
+		// zend_error(E_ERROR, e.what());
+	}
+
+        if (!gw.isValid()) { // エントリが見つからない場合 false を返す
+          RETURN_FALSE;
+        }
+	object_init(return_value);
+	_geowordToObject(gw, return_value);
+]]>
+			</code>
+		</function>
+		
+		<!-- MAgetGeowordEntries()　メソッド -->
+		<function name="MAgetGeowordEntries">
+			<proto>array MAgetGeowordEntries(string surface)</proto>
+			<code>
+<![CDATA[
+	std::map<std::string, geonlp::Geoword> ret;
+	try {
+		payload->data->wrappedMA()->getGeowordEntries(surface, ret);
+	} catch (std::runtime_error& e) {
+		zend_throw_exception(zend_exception_get_default(TSRMLS_C), (char*)e.what(), 0 TSRMLS_CC);
+		// zend_error(E_ERROR, e.what());
+	}
+	
+	for (std::map<std::string, geonlp::Geoword>::iterator it = ret.begin(); it != ret.end(); it++) {
+		zval* obj;
+		MAKE_STD_ZVAL(obj);
+		object_init(obj);
+		_geowordToObject(it->second, obj);
+		add_assoc_zval(return_value, (char*)(it->first.c_str()), obj);
+	}
+]]>
+			</code>
+		</function>
+	
+		<!-- MAsetActiveDictionaries()　メソッド -->
+		<function name="MAsetActiveDictionaries">
+			<proto>bool MAsetActiveDictionaries(array dictionary_id_array)</proto>
+			<code>
+<![CDATA[
+	try {
+		if (dictionary_id_array != NULL) {
+                   // zval から std::vector<int> に積み替え
+		   HashTable* ht = Z_ARRVAL_P(dictionary_id_array);
+                   HashPosition hpos;
+                   zval **data;
+                   std::vector<int> dictionary_ids;
+		   for (zend_hash_internal_pointer_reset_ex(ht, &hpos);
+		        zend_hash_get_current_data_ex(ht, (void**)&data, &hpos) == SUCCESS;
+			zend_hash_move_forward_ex(ht, &hpos)) {
+                     if (Z_TYPE_PP(data) == IS_LONG) {
+                       dictionary_ids.push_back(Z_LVAL_PP(data));
+                     } else {
+		       zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Dictionary ID must be int values.", 0 TSRMLS_CC);
+                     }
+                   }
+                   payload->data->wrappedMA()->setActiveDictionaries(dictionary_ids);
+		} else {
+		   payload->data->wrappedMA()->resetActiveDictionaries();
+		}
+	} catch (std::runtime_error& e) {
+		zend_throw_exception(zend_exception_get_default(TSRMLS_C), (char*)e.what(), 0 TSRMLS_CC);
+		// zend_error(E_ERROR, e.what());
+	}
+	RETURN_TRUE; // 常に true を返す
+]]>
+			</code>
+		</function>
+
+		<!-- MAresetActiveDictionaries()　メソッド -->
+		<function name="MAresetActiveDictionaries">
+			<proto>bool MAresetActiveDictionaries()</proto>
+			<code>
+<![CDATA[
+	try {
+		payload->data->wrappedMA()->resetActiveDictionaries();
+	} catch (std::runtime_error& e) {
+		zend_throw_exception(zend_exception_get_default(TSRMLS_C), (char*)e.what(), 0 TSRMLS_CC);
+		// zend_error(E_ERROR, e.what());
+	}
+	RETURN_TRUE; // 常に true を返す
+]]>
+			</code>
+		</function>
+	
+		<!-- MAgetActiveDictionaries()　メソッド -->
+		<function name="MAgetActiveDictionaries">
+			<proto>array MAgetActiveDictionaries(void)</proto>
+			<code>
+<![CDATA[
+	try {
+          const std::map<int, geonlp::Dictionary>& ids
+	    = payload->data->wrappedMA()->getActiveDictionaries();
+	  for (std::map<int, geonlp::Dictionary>::const_iterator it = ids.begin(); it != ids.end(); it++) {
+	    add_next_index_long(return_value, (*it).first);
+          }
+	} catch (std::runtime_error& e) {
+          zend_throw_exception(zend_exception_get_default(TSRMLS_C), (char*)e.what(), 0 TSRMLS_CC);
+	  // zend_error(E_ERROR, e.what());
+	}
+	RETURN_TRUE;
+]]>
+			</code>
+		</function>
+	
+		<!-- MAsetActiveClasses()　メソッド -->
+		<function name="MAsetActiveClasses">
+			<proto>bool MAsetActiveClasses(array class_array)</proto>
+			<code>
+<![CDATA[
+	try {
+		if (class_array != NULL) {
+                   // zval から std::vector<std::string> に積み替え
+		   HashTable* ht = Z_ARRVAL_P(class_array);
+                   HashPosition hpos;
+                   zval **data;
+                   std::vector<std::string> classes;
+		   for (zend_hash_internal_pointer_reset_ex(ht, &hpos);
+		        zend_hash_get_current_data_ex(ht, (void**)&data, &hpos) == SUCCESS;
+			zend_hash_move_forward_ex(ht, &hpos)) {
+                     if (Z_TYPE_PP(data) == IS_STRING) {
+                       classes.push_back(Z_STRVAL_PP(data));
+                     } else {
+		       zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Class name must be strings.", 0 TSRMLS_CC);
+                     }
+                   }
+                   payload->data->wrappedMA()->setActiveClasses(classes);
+		} else {
+		   payload->data->wrappedMA()->resetActiveClasses();
+		}
+	} catch (std::runtime_error& e) {
+		zend_throw_exception(zend_exception_get_default(TSRMLS_C), (char*)e.what(), 0 TSRMLS_CC);
+		// zend_error(E_ERROR, e.what());
+	}
+	RETURN_TRUE; // 常に true を返す
+]]>
+			</code>
+		</function>
+
+		<!-- MAresetActiveClasses()　メソッド -->
+		<function name="MAresetActiveClasses">
+			<proto>bool MAresetActiveClasses()</proto>
+			<code>
+<![CDATA[
+	try {
+		payload->data->wrappedMA()->resetActiveClasses();
+	} catch (std::runtime_error& e) {
+		zend_throw_exception(zend_exception_get_default(TSRMLS_C), (char*)e.what(), 0 TSRMLS_CC);
+		// zend_error(E_ERROR, e.what());
+	}
+	RETURN_TRUE; // 常に true を返す
+]]>
+			</code>
+		</function>
+	
+		<!-- MAgetActiveClasses()　メソッド -->
+		<function name="MAgetActiveClasses">
+			<proto>array MAgetActiveClasses(void)</proto>
+			<code>
+<![CDATA[
+	std::vector<std::string> classes;
+	try {
+		classes = payload->data->wrappedMA()->getActiveClasses();
+	} catch (std::runtime_error& e) {
+		zend_throw_exception(zend_exception_get_default(TSRMLS_C), (char*)e.what(), 0 TSRMLS_CC);
+		// zend_error(E_ERROR, e.what());
+	}
+	for (std::vector<std::string>::iterator it = classes.begin(); it != classes.end(); it++) {
+	    add_next_index_string(return_value, (*it).c_str(), 1);
+        }
+	RETURN_TRUE;
+]]>
+			</code>
+		</function>
+	
+	</class>
+
+</extension>

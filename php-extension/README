@@ -1,0 +1,35 @@
+geonlp PHP extension
+
+■概要
+
+geonlp ライブラリ (libgeonlp.la) を PHP から利用できるようにする PHP extension です。
+PECL を用いて、C++ で実装されています。
+PECL での開発を容易にするため、CodeGen_PECL を使用しています。
+
+■環境設定
+
+PECL での PHP extension 開発には、PHP のヘッダファイル、
+各種開発ツールを必要とするため、php-devel パッケージをインストールします。
+
+ ex. # yum install php-devel
+     # apt-get install php-devel
+
+また、PEAR パッケージのひとつ CodeGen_PECL を、pear コマンドでインストールします。
+
+ # pear install --alldeps codegen_pecl
+
+■ビルド/インストール
+
+ $ make
+ # make install
+
+インストールを行うと、
+ phpgeonlp_ma.so が PHP extension を格納するディレクトリ (/usr/lib/php/modules) にコピー
+ phpgeonlp_ma.ini が /etc/php.d にコピー
+されます。
+phpgeonlp_ma.ini には extension=phpgeonlp_ma.so と指定されており、
+PHP 実行時にこの拡張ライブラリを読み込めるようになります。
+
+■使用方法
+
+tests/ 以下にあるサンプルスクリプトを参照してください。

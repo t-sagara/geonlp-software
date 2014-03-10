@@ -2,6 +2,7 @@
 *.slo
 *.lo
 *.o
+*.po
 
 # Compiled Dynamic libraries
 *.so
@@ -11,3 +12,49 @@
 *.lai
 *.la
 *.a
+
+# Other temporary files
+*.log
+*~
+.libs/
+.deps/
+
+Makefile
+Makefile.in
+config.guess
+config.sub
+config.status
+configure.scan
+libtool
+ltmain.sh
+dict/Makefile
+dict/Makefile.in
+dict/zip/*.zip
+etc/Makefile
+etc/Makefile.in
+geonlp_ma_makedic/Makefile
+geonlp_ma_makedic/Makefile.in
+include/Makefile
+include/Makefile.in
+libgeonlp/Makefile
+libgeonlp/Makefile.in
+php-extension/Makefile
+php-extension/Makefile.in
+src/Makefile
+src/Makefile.in
+autom4te.cache/
+dict/geo_name_fullname.drt
+dict/geodic.sq3
+dict/mecabusr.dic
+dict/wordlist.sq3
+etc/geonlp.rc
+etc/geonlp_ma_makedic.rc
+geonlp_ma_makedic/geonlp_ma_makedic
+include/config.h
+include/config.h.in
+include/stamp-h1
+src/geonlp_add
+src/geonlp_api
+src/geonlp_api_server
+src/geonlp_ma
+src/geonlp_rebuild

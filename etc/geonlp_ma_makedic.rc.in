@@ -1,0 +1,15 @@
+;
+; IpadicGenerator
+;
+; 構成定義ファイル
+;
+
+; mecab_dict_index へのパス
+mecab_dict_index_path = @MECAB_DICT_INDEX@
+
+; 一時ファイル（/tmp/IpadicGenerator/*）を削除するか否かのフラグ。
+; 削除する場合はtrue、そうでない場合はfalse
+delete_temp_file_flag = true
+
+; 地名語判定用例文
+example_sentences = {$GEOWORD}|{$GEOWORD}で観光する|{$GEOWORD}に滞在する|今日は{$GEOWORD}|日本に{$GEOWORD}がある|日本の{$GEOWORD}はどこ？

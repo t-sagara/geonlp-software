@@ -1,0 +1,19 @@
+;
+; IpadicGenerator
+;
+; 構成定義ファイル
+;
+
+; mecab_dict_index へのパス
+mecab_dict_index_path = /usr/local/libexec/mecab/mecab-dict-index
+
+; MeCabのシステム辞書があるディレクトリ
+; sysdic_directory_path = /usr/local/lib/mecab/dic/ipadic
+sysdic_directory_path = /usr/local/lib/mecab/dic/naist-jdic
+
+; 一時ファイル（/tmp/IpadicGenerator/*）を削除するか否かのフラグ。
+; 削除する場合はtrue、そうでない場合はfalse
+delete_temp_file_flag = true
+
+; 地名語判定用例文
+example_sentences = {$GEOWORD}|{$GEOWORD}で観光する|{$GEOWORD}に滞在する|今日は{$GEOWORD}|日本に{$GEOWORD}がある

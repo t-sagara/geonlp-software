@@ -1,0 +1,9 @@
+{
+  "method": "geonlp.parse",
+  "params":
+    [
+      "NIIは千代田区一ツ橋２－１－２にあります。神保町から徒歩3分。",
+      { "geocoding":true }
+    ],
+  "id": "1"
+}

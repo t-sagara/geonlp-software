@@ -1,0 +1,95 @@
+地名語抽出システム
+C++API 説明
+
+■概要
+・環境
+・ディレクトリ構成
+・ビルド方法
+・Doxygenによるドキュメント生成(オプション)
+・プロファイル
+・サンプルの実行
+・カスタマイズ
+
+■環境
+バージョンは開発に用いたものを示す。
+gcc 4.2.1
+sqlite3 3.6.22
+MeCab 0.98
+boost 1.42.0 (property_tree利用のため1.41.0以上)
+以下オプション
+doxygen 1.6.1
+
+■ディレクトリ構成
+アーカイブ解凍後のディレクトリ構成を以下に示す。[root]で解凍先ディレクトリを示す。
+[root]/README  - このファイル
+[root]/include
+[root]/src
+[root]/sample
+[root]/GeoParser.rc
+[root]/Doxyfile.internal
+[root]/Doxyfile.external
+
+■ビルド方法
+[root]/srcでmakeすることにより、[root]/lib/libGeoParser.a
+がビルドされる。
+
+[root]/include
+[root]/lib/libGeoParser.a
+
+を利用することでアプリケーションを作成することが可能。
+サンプルは[root]/sampleにある。
+[root]/sampleでmakeすることにより、サンプルアプリケーション
+[root]/sample/GeoParserができる。
+
+■Doxygenによるドキュメント生成(オプション)
+[root]をカレントディレクトリとして、以下のコマンドによりドキュメントが生成される。
+$doxygen Doxyfile.external
+$doxygen Doxyfile.internal
+
+それぞれ、以下のディレクトリにhtmlを生成する。
+[root]/docs/external
+[root]/docs/internal
+
+externalは、[root]includeにあるヘッダのみを対象にドキュメント生成したもの
+で、アプリケーション作成時にはこちらを参照する。
+internalは、全ソースを対象としたもので、ソースコード全体の理解のためにはこちら
+を参照する。
+
+■プロファイル
+APIを利用するにはプロファイルを定義しておくことが必要である。
+サンプルとして提供されている[root]/GeoParser.rcを、
+/usr/local/etc/にコピーしておく。
+このとき、地名語辞書およびMeCabのユーザ辞書のパスを必要に応じて変更する。
+変更方法はGeoParser.rc自体のコメントを参照のこと。
+
+このプロファイルを用いたAPIを利用するにはまず
+geoword::createGeowordService("GeoParser")
+でGeowordServiceへのポインタを取得する。
+ここで指定するプロファイル名"GeoParser"は、ファイル名"GeoParser.rc"から
+拡張子を除いたものである。
+
+■サンプルの実行
+ビルドした[root]/sample/GeoParserを実行する。
+このサンプルは、入力された文章をparse()の入力とし、出力をコンソールに出力
+するものである。空文字列が入力されると終了する。
+動作しない場合には、以下の点を見直す。
+・プロファイル"GeoParser"を指定の場所に置いたか。
+・プロファイル中で指定されている地名語辞書、ユーザ辞書のパスはあっているか。
+
+■カスタマイズ
+・プロファイルのディレクトリ
+プロファイルを置くディレクトリはソースコードにハードコーディングされている。
+変更したい場合には、src/Settings.hの以下の一文を変更する。
+#define SETTINGS_DIR_PATH "/usr/local/etc/"
+
+・地名語候補になり得る品詞集合
+地名語候補になり得る品詞集合を変更したい場合には、PHBSDefs.cppで定義された
+クラスPHBSDefのコンストラクタを変更する。
+地名語候補になり得る品詞集合の意味については本文書では扱わない。
+別途地名語抽出アルゴリズム等を参照のこと。
+
+・parse()の出力フォーマット
+parse()の出力フォーマットを変えたい場合には、AbstructGeowordFormatter
+を継承したクラスを実装する。その上でGeowordServiceImplのコンストラクタ
+に手を入れて、プロファイルで指定された名前で新たに実装したクラスが利用される
+ように変更する。
