@@ -30,6 +30,7 @@ ltmain.sh
 dict/Makefile
 dict/Makefile.in
 dict/zip/*.zip
+dict/zip/core-dics.tgz
 etc/Makefile
 etc/Makefile.in
 geonlp_ma_makedic/Makefile
