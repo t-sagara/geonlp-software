@@ -1,0 +1,3 @@
+[submodule "dict/geonlp-data"]
+	path = dict/geonlp-data
+	url = git@github.com:t-sagara/geonlp-data.git

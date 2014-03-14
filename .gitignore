@@ -21,6 +21,8 @@
 
 Makefile
 Makefile.in
+aclocal.m4
+configure
 config.guess
 config.sub
 config.status
@@ -31,6 +33,7 @@ dict/Makefile
 dict/Makefile.in
 dict/zip/*.zip
 dict/zip/core-dics.tgz
+dict/zip/geonlp_*
 etc/Makefile
 etc/Makefile.in
 geonlp_ma_makedic/Makefile

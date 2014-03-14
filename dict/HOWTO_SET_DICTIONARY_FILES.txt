@@ -1,0 +1,17 @@
+Location names dictionaries are not included because they are large.
+
+Please make a directory with name 'geonlp-data', 
+and download core dictionaries from
+http://www.info-proto.com/resource/geonlp/core-dics.tgz
+and untar under the directory.
+
+% mkdir geonlp-data
+% cd geonlp-data
+% wget http://www.info-proto.com/resource/geonlp/core-dics.tgz
+% gzip -dc core-dics.tgz | tar xf -
+
+Or, if you need, you can download other dictionaries from the GeoNLP data server from https://geonlp.ex.nii.ac.jp/ .
+
+
+
+If you have a GitHub account, you can use git clone instead.
