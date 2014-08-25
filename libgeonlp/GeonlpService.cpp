@@ -288,6 +288,22 @@ namespace geonlp
       }
     }
 
+    if (op.has_key("topic-point")) {
+      try {
+	this->_options.set_value("topic-point", op._get_double_list("topic-point"));
+      } catch (picojson::PicojsonException& e) {
+	throw ServiceRequestFormatException("Option \"topic-point\" must be a list of double values.");
+      }
+    }
+
+    if (op.has_key("topic-radius")) {
+      try {
+	this->_options.set_value("topic-radius", op._get_double("topic-radius"));
+      } catch (picojson::PicojsonException& e) {
+	throw ServiceRequestFormatException("Option \"topic-radius\" must be a double value.");
+      }
+    }
+
     // コンテキストにもオプションをセット
     this->_context.setOptions(this->_options);
   }
@@ -861,7 +877,7 @@ namespace geonlp
     std::vector<damswrapper::Candidate> candidates;
 
     while (tail.length() > 0) {
-      std::cerr << "retrieve::surface:'" << surface << "'\n";
+      // std::cerr << "retrieve::surface:'" << surface << "'\n";
       damswrapper::retrieve(score, tail, candidates, surface);
 
       if (score < 4) return false; // 二階層以上が一致する候補なし

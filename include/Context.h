@@ -100,6 +100,10 @@ namespace geonlp
     float _cumulative_lon;
     int   _cumulative_points;
 
+    // 関心地点 (lat, lon のフラットな配列、二次元ではない）
+    std::vector<double> _topic_coords;
+    double _topic_radius;
+
     picojson::array _nodes;                 // parseNode の結果、全地名語候補を含む
     picojson::ext _options;          // parse オプション
 
@@ -113,7 +117,7 @@ namespace geonlp
     // @arg geoword 地名語
     // @arg n       この地名語が出現した位置（文の先頭から数えた単語数）
     // @arg m       この地名語が同綴語の中で何番目の候補か
-    int score(const Geoword& geoword, int n, int m) const;
+    int score(const Geoword& geoword, int n, int m);
 
     // @brief Geoword を一つ選択済みコンテキスト関係に登録する
     // @arg geoword 地名語
@@ -155,7 +159,7 @@ namespace geonlp
     }
 
     // parse オプションセット
-    inline void setOptions(const picojson::ext& options) { this->_options = options; }
+    void setOptions(const picojson::ext& options); // { this->_options = options; }
 
     // コンテキスト情報のクリア
     void clear(void);

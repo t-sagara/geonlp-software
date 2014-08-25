@@ -20,14 +20,16 @@ int main(int argc, char** argv) {
       //line = "住所\n\n日本橋１－２－３ 日本橋プラザビル　2Ｆ\n\n南海難波駅より徒歩5分。\n";
       //line = "さいたま市の常盤小に行く。";
       //line = "長野新潟など中日本でも強振が\n東海等に飛び火しなければ良いが";
-      line = "日本橋１－２－３（大阪上本町駅より徒歩5分）";
+      //line = "日本橋１－２－３（大阪上本町駅より徒歩5分）";
       //line = "さいたま市の常盤小に行く。";
+      line = "永山駅で降りる。";
     }
 
     // parse
     params.clear();
     params.push_back(picojson::value(line));
-    params.push_back(picojson::value(picojson::ext("{\"threshold\":0,\"geocoding\":true,\"show-candidate\":false}")));
+    // params.push_back(picojson::value(picojson::ext("{\"threshold\":0,\"geocoding\":true,\"show-candidate\":false}")));
+    params.push_back(picojson::value(picojson::ext("{\"threshold\":0,\"geocoding\":true,\"show-candidate\":false,\"topic-radius\":20.0,\"topic-point\":[35.681382,139.766084]}")));
     v = service->parse(params);
     std::cout << v.serialize() << std::endl << std::endl;
   }

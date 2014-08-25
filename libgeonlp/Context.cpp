@@ -8,13 +8,13 @@
 #include <sstream>
 #include <cmath>
 #include "Context.h"
-
-// #define CONTEXT_LOG 1 // デバッグ用、コメントアウトすると /tmp/geonlp.debug にスコア計算結果を出力する
+//#define CONTEXT_LOG 1 // デバッグ用、コメントアウトすると /tmp/geonlp.debug にスコア計算結果を出力する
 #ifdef CONTEXT_LOG
 #include <fstream>
 #include <vector>
 #include <string>
 #endif /* CONTEXT_LOG */
+#include "Util.h"
 
 // シグモイド関数
 // -1.0 ≦ v ≦ 1.0
@@ -169,6 +169,20 @@ namespace geonlp
 
   /// Context の実装
 
+  void Context::setOptions(const picojson::ext& options) {
+    this->clear();
+    this->_options = options;
+
+    if (this->_options.has_key("topic-point")) {
+      this->_topic_coords = this->_options._get_double_list("topic-point");
+    }
+    if (this->_options.has_key("topic-radius")) {
+      this->_topic_radius = this->_options._get_double("topic-radius");
+    } else {
+      this->_topic_radius = 10.0; // 関心範囲のデフォルトは 10km
+    }
+  }
+
   void Context::clear(void) {
     this->_context_neclass.clear();
     this->_context_dictionary.clear();
@@ -183,6 +197,8 @@ namespace geonlp
     this->_selected_name.clear();
     this->_cumulative_lat = this->_cumulative_lon = .0;
     this->_cumulative_points = 0;
+    this->_topic_coords.clear();
+    this->_topic_radius = -1.0;
   }
 
   // Geoword を一つコンテキスト関係に登録する
@@ -279,7 +295,7 @@ namespace geonlp
   }
 
   // Geoword の出現スコアを計算する
-  int Context::score(const Geoword& geoword, int n, int m) const {
+  int Context::score(const Geoword& geoword, int n, int m) {
     std::string geonlp_id = geoword.get_geonlp_id();
     // コンテキスト中に存在する親地名語数をカウント
     const std::vector<std::string>& hypernyms = geoword.get_hypernym();
@@ -311,15 +327,32 @@ namespace geonlp
     // 重心からの距離によるスコア加算
     int spatial_bonus = 0;
     if (geoword.get_latitude().length() > 0 && geoword.get_longitude().length() > 0) {
-      float clat, clon, lat, lon;
+      // std::cerr << "Geoword:" << geoword.toJson() << std::endl;
+      float lat, lon;
       std::istringstream is_lat(geoword.get_latitude());
       std::istringstream is_lon(geoword.get_longitude());
       is_lat >> lat;
       is_lon >> lon;
-      int npoints = this->getCentroid(clat, clon);
-      float square_dist = (lat - clat) * (lat - clat) + (lon - clon) * (lon - clon);
-      if (square_dist < 1.0) spatial_bonus = 100;
-      else spatial_bonus = (int)(100 / square_dist);
+
+      if (this->_topic_coords.size() < 2) { // 関心地点が指定されていない場合、全体の重心を利用する
+	float clat, clon;
+	int npoints = this->getCentroid(clat, clon);
+	double dist = Util::latlonDist(lat, lon, clat, clon);
+	if (dist < this->_topic_radius) {
+	  spatial_bonus = (int)(100 * (this->_topic_radius - dist) / this->_topic_radius);
+	}
+      } else {
+	spatial_bonus = 0;
+	for (int i = 0; i < this->_topic_coords.size() / 2; i++) {
+	  double& clat = this->_topic_coords.at(i * 2);
+	  double& clon = this->_topic_coords.at(i * 2 + 1);
+	  double dist = Util::latlonDist(lat, lon, clat, clon);
+	  if (dist < this->_topic_radius) {
+	    spatial_bonus += (int)(100 * (this->_topic_radius - dist) / this->_topic_radius);
+	  }
+	}
+      }
+
     }
     
     // スコア計算、パラメータは要調整
