@@ -8,4 +8,5 @@ noinst_HEADERS = DBAccessor.h FileAccessor.h MeCabAdapter.h Suffix.h \
                  SqliteNotInitializedException.h \
                  DartsException.h FormatException.h \
                  picojson.h picojsonExt.h CSVReader.h \
-                 GeonlpService.h Context.h Classifier.h
+                 GeonlpService.h Context.h Classifier.h \
+                 JsonRpcClient.h

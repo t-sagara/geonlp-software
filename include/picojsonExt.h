@@ -34,6 +34,8 @@ namespace picojson
     picojson::value _v;
 
   protected:
+    // picojson オブジェクトの指定したキーに null をセットする
+    void _set_null(const std::string& key);
     // picojson オブジェクトの指定したキーに boolean 値をセットする
     void _set_bool(const std::string& key, bool b);
     // picojson オブジェクトの指定したキーに文字列をセットする
@@ -56,6 +58,8 @@ namespace picojson
     void _set_double_list(const std::string& key, const std::vector<double>& values);
 
   public:
+    // picojston オブジェクトの指定したキーが null かどうか判定する
+    bool is_null(const std::string& key) const;
     // picojson オブジェクトの指定したキーの値を boolean 値として取得する
     bool _get_bool(const std::string& key) const throw (PicojsonException);
     // picojson オブジェクトの指定したキーの値を文字列として取得する
@@ -85,6 +89,7 @@ namespace picojson
     // setter と getter
     void set_value(const std::string& key, const picojson::value& v);
     void set_value(const std::string& key, const ext& v);
+    inline void set_value(const std::string& key, const picojson::null& n) { this->_set_null(key); }
     inline void set_value(const std::string& key, bool b) { this->_set_bool(key, b); }
     inline void set_value(const std::string& key, const char* v) { this->_set_string(key, std::string(v)); }
     inline void set_value(const std::string& key, const std::string& vstring) { this->_set_string(key, vstring); }

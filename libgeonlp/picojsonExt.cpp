@@ -25,6 +25,11 @@ namespace picojson
     this->_v.get<picojson::object>().insert(std::make_pair(key, v._v));
   }
 
+  void ext::_set_null(const std::string& key) {
+    this->_v.get<picojson::object>().erase(key);
+    this->_v.get<picojson::object>().insert(std::make_pair(key, picojson::value::value()));
+  }
+  
   void ext::_set_bool(const std::string& key, bool b) {
     this->_v.get<picojson::object>().erase(key);
     this->_v.get<picojson::object>().insert(std::make_pair(key, picojson::value(b)));
@@ -205,6 +210,15 @@ namespace picojson
       return varray;
     }
     throw PicojsonException(sstr.str());
+  }
+
+  // picojson オブジェクトの指定したキーの値が null かどうか判定する
+  // null の場合、およびキーが存在しない場合は true を返す
+  // それ以外の場合は false を返す
+  bool ext::is_null(const std::string& key) const {
+    const picojson::value v0 = this->get_value(key);
+    if (!v0 || v0.is<picojson::null>()) return true;
+    return false;
   }
 
   // picojson オブジェクトから、指定したキーの値を bool 値として取得する

@@ -2,14 +2,14 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.61])
-AC_INIT([geonlp], [1.0.7], [geonlp@info-proto.com])
-AM_INIT_AUTOMAKE([geonlp], [1.0.7])
+AC_INIT([geonlp], [1.0.8], [geonlp@info-proto.com])
+AM_INIT_AUTOMAKE([geonlp], [1.0.8])
 AC_CONFIG_SRCDIR([src/])
 AC_CONFIG_HEADER([include/config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 # library version
-LIB_VERSION_INFO='1.0.7'
+LIB_VERSION_INFO='1.0.8'
 AC_SUBST(LIB_VERSION_INFO)
 
 # Checks for programs.

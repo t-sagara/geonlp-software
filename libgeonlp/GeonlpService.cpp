@@ -304,6 +304,44 @@ namespace geonlp
       }
     }
 
+    if (!op.is_null("dist-server")) {
+      picojson::ext e(op.get_value("dist-server"));
+      picojson::ext o;
+      // validate
+      try {
+	o.set_value("host", e._get_string("host"));
+      } catch (picojson::PicojsonException& e) {
+	throw ServiceRequestFormatException("Option \"dist-server\" must have string-type \"host\" parameter.");
+      }
+      try {
+	o.set_value("path", e._get_string("path"));
+      } catch (picojson::PicojsonException& e) {
+	throw ServiceRequestFormatException("Option \"dist-server\" must have string-type \"path\" parameter.");
+      }
+      if (e.has_key("port")) {
+	try {
+	  o.set_value("port", e._get_string("port"));
+	} catch (picojson::PicojsonException& e) {
+	  throw ServiceRequestFormatException("The \"port\" parameter for option \"dist-server\" must be a string-type value (default:\"80\").");
+	}
+      } else {
+	o.set_value("port", "80");
+      }
+      if (e.has_key("method")) {
+	try {
+	  o.set_value("method", e._get_string("method"));
+	} catch (picojson::PicojsonException& e) {
+	  throw ServiceRequestFormatException("The \"method\" parameter for option \"dist-server\" must be a string-type value (default:\"getWeight\").");
+	}
+      } else {
+	o.set_value("method", "getWeight");
+      }
+      if (e.has_key("option")) {
+	o.set_value("option", e.get_value("option"));
+      }
+      this->_options.set_value("dist-server", o);
+    }
+
     // コンテキストにもオプションをセット
     this->_context.setOptions(this->_options);
   }
@@ -315,6 +353,7 @@ namespace geonlp
     this->_options.set_value("threshold", 0);
     this->_options.set_value("show-score", false);
     this->_options.set_value("show-candidate", false);
+    this->_options.set_value("dist-server", picojson::null());
     this->_ma_ptr->resetActiveDictionaries();
     this->_ma_ptr->resetActiveClasses();
     this->_context.setOptions(this->_options);

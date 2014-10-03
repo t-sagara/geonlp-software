@@ -15,6 +15,7 @@
 #include <string>
 #endif /* CONTEXT_LOG */
 #include "Util.h"
+#include "JsonRpcClient.h"
 
 // シグモイド関数
 // -1.0 ≦ v ≦ 1.0
@@ -352,9 +353,8 @@ namespace geonlp
 	  }
 	}
       }
-
     }
-    
+
     // スコア計算、パラメータは要調整
     int score = 0;
     score += int(1500.0 * _sigmoid(1.0, nfullsibling));
@@ -515,6 +515,8 @@ namespace geonlp
       }
       picojson::object& o = (*it).get<picojson::object>();
       surface = (*(o.find("surface"))).second.to_str();
+
+      // 候補一覧に対してスコアを計算
       picojson::object::iterator it_geowords = o.find("candidates");
       if (it_geowords != o.end()) {
 	int m = 0;
@@ -522,11 +524,60 @@ namespace geonlp
 	Geoword bestGeoword;
 	picojson::value& v_geowords = (*it_geowords).second;
 	picojson::array& varray = v_geowords.get<picojson::array>();
+
+	// dist-server が指定されていれば分布情報保持サーバと通信して重みを取得
+	// note: host, path, port, method, がパラメータとして必ず含まれる
+	//       option は含まれていない可能性がある
+	std::vector<double> weights;
+	if (!this->_options.is_null("dist-server")) {
+	  picojson::ext e;
+	  picojson::ext op(this->_options.get_value("dist-server"));
+	  // リクエストの構築
+	  std::string req;
+	  {
+	    picojson::ext json_request;
+	    json_request.set_value("method", op._get_string("method"));
+	    json_request.set_value("id", rand() % 10000 + 1);
+	    // 座標列を用意
+	    picojson::array coords;
+	    for (picojson::array::iterator it2 = varray.begin(); it2 != varray.end(); it2++) {
+	      Geoword geoword(*it2);
+	      if (!geoword.isValid()) throw ContextException(geoword.toJson());
+	      picojson::array latlon;
+	      latlon.push_back(picojson::value(geoword.get_latitude()));
+	      latlon.push_back(picojson::value(geoword.get_longitude()));
+	      coords.push_back(picojson::value(latlon));
+	    }
+	    // params を用意
+	    picojson::array params;
+	    params.push_back(picojson::value(coords));
+	    if (!op.is_null("option")) {
+	      params.push_back(op.get_value("option"));
+	    }
+	    json_request.set_value("params", picojson::value(params));
+	    req = json_request.toJson();
+	    // std::cout << "JSON_REQUEST: '" << req << "'" << std::endl;
+	  }
+	  // JSON_RPC を利用して結果を取得
+	  boost::asio::io_service io_service;
+	  geonlp::JsonRpcClient c(io_service, op._get_string("host"), op._get_string("path"), req, op._get_string("port"));
+	  io_service.run();
+	  e = c.getJsonResponse();
+	  weights = e._get_double_list("result");
+	  // std::cout << "JSON_RESPONSE: '" << e.toJson() << "'" << std::endl;
+	}
+
+	// 個々の地名語のスコアを取得
+	int idx = 0;
 	for (picojson::array::iterator it2 = varray.begin(); it2 != varray.end(); it2++) {
 	  Geoword geoword(*it2);
 	  if (!geoword.isValid()) throw ContextException(geoword.toJson());
 	  int score = this->score(geoword, n, m);
 	  score += this->selectedScore(geoword, n, m);
+	  if (weights.size() > 0) {
+	    score *= weights[idx];
+	    idx++;
+	  }
 	  if (score > hiscore) {
 	    hiscore = score;
 	    bestGeoword = geoword;
