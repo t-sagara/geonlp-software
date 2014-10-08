@@ -572,10 +572,10 @@ namespace geonlp
 	for (picojson::array::iterator it2 = varray.begin(); it2 != varray.end(); it2++) {
 	  Geoword geoword(*it2);
 	  if (!geoword.isValid()) throw ContextException(geoword.toJson());
-	  int score = this->score(geoword, n, m);
-	  score += this->selectedScore(geoword, n, m);
+	  int score = 1 + this->score(geoword, n, m) + this->selectedScore(geoword, n, m); // 最低でも 1
 	  if (weights.size() > 0) {
 	    score *= weights[idx];
+	    if (weights[idx] > 0.001 && score == 0) score = 1;
 	    idx++;
 	  }
 	  if (score > hiscore) {

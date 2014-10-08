@@ -13,6 +13,7 @@
 #include <boost/shared_ptr.hpp>
 #include "GeonlpService.h"
 #include "Profile.h"
+#include "Util.h"
 
 namespace geonlp
 {
@@ -308,6 +309,26 @@ namespace geonlp
       picojson::ext e(op.get_value("dist-server"));
       picojson::ext o;
       // validate
+      if (e.has_key("url")) {
+	// Parse URL parameter
+	std::string url;
+	try {
+	  url = e._get_string("url");
+	} catch (picojson::PicojsonException& e) {
+	  throw ServiceRequestFormatException("The \"url\" parameter for Option \"dist-server\" must be a string-type value.");
+	}
+	std::vector<std::string> url_parts;
+	if (!geonlp::Util::split_url(url, url_parts)) {
+	  throw ServiceRequestFormatException("The \"url\" parameter for Option \"dist-server\" cannot be parsed as an URL string.");
+	}
+	if (url_parts[1] != "http") {
+	  throw ServiceRequestFormatException("The \"dist-server\" option cannot accept secure http(\"https\") yet.");
+	}
+	if (url_parts[3] == "") url_parts[3] = "80";
+	e.set_value("host", url_parts[2]);
+	e.set_value("port", url_parts[3]);
+	e.set_value("path", url_parts[4]);
+      }
       try {
 	o.set_value("host", e._get_string("host"));
       } catch (picojson::PicojsonException& e) {

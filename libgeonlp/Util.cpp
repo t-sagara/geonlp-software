@@ -27,6 +27,8 @@ namespace
 
 namespace geonlp
 {
+  boost::regex Util::pattern_url("(https?)://(.+?)?:?(\\d+)?((/.*?)([&?=#!].*)?)$", boost::regex::perl | boost::regex::icase);
+
   /// @brief 引数がカタカナとひらがなのみの場合、ひらがなをカタカナに変換した文字列を返す。
   ///
   /// 引数にカタカナひらがな意外の文字が含まれている場合には空文字列を返す。
@@ -171,4 +173,17 @@ namespace geonlp
     double dist = sqrt(x * x + y * y);
     return dist;
   }
+  
+  bool Util::split_url(const std::string& url, std::vector<std::string>& result) {
+    boost::smatch what;
+    result.clear();
+    if (!regex_match(url, what, Util::pattern_url)) {
+      return false;
+    }
+    for (int i = 0; i < 7; i++) {
+      result.push_back(std::string(what[i].first, what[i].second));
+    }
+    return true;
+  }
+
 }

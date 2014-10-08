@@ -31,7 +31,8 @@ int main(int argc, char** argv) {
     params.push_back(picojson::value(line));
     // params.push_back(picojson::value(picojson::ext("{\"threshold\":0,\"geocoding\":true,\"show-candidate\":false}")));
     // params.push_back(picojson::value(picojson::ext("{\"threshold\":0,\"geocoding\":true,\"show-candidate\":false,\"topic-radius\":20.0,\"topic-point\":[35.681382,139.766084]}")));
-    params.push_back(picojson::value(picojson::ext("{\"threshold\":0,\"geocoding\":true,\"show-candidate\":true,\"dist-server\":{\"host\":\"localhost\",\"port\":80,\"path\":\"/test.php\",\"method\":\"getHiroshimaWeight\",\"option\":null}}")));
+    // params.push_back(picojson::value(picojson::ext("{\"threshold\":0,\"geocoding\":true,\"show-candidate\":true,\"dist-server\":{\"host\":\"localhost\",\"port\":80,\"path\":\"/test.php\",\"method\":\"getHiroshimaWeight\",\"option\":null}}")));
+    params.push_back(picojson::value(picojson::ext("{\"threshold\":0,\"geocoding\":true,\"show-candidate\":false,\"dist-server\":{\"url\":\"http://localhost:80/test.php\",\"method\":\"getHiroshimaWeight\",\"option\":null}}")));
     v = service->parse(params);
     std::cout << v.serialize() << std::endl << std::endl;
   }

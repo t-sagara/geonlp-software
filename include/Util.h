@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <boost/regex.hpp>
 
 namespace geonlp
 {
@@ -26,6 +27,7 @@ namespace geonlp
   ///
   class Util {
   private:
+    static boost::regex pattern_url;
 
   public:
     // ひらがなカタカナのみからなる文字列であればカタカナに変換して返す。
@@ -36,6 +38,17 @@ namespace geonlp
 
     // 経緯度で表された二点間の直線距離を計算する
     static double latlonDist(const double& lat0, const double& lon0, const double& lat1, const double& lon1) throw(UtilException);
+
+    // URL を分解する
+    // 分解した結果は result に格納される
+    // 0 - url 全体
+    // 1 - scheme
+    // 2 - server
+    // 3 - port
+    // 4 - path (full)
+    // 5 - path
+    // 6 - param
+    static bool split_url(const std::string& url, std::vector<std::string>& result);
 
   };
 	
