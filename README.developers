@@ -15,28 +15,6 @@
 - zip
 
 
-□ 辞書データ
-
-GeoNLP 地名解析辞書は本パッケージには同梱していません。必要に応じて GeoNLP サーバからダウンロードしてください。
-GeoNLP サーバ： https://geonlp.ex.nii.ac.jp/
-
-コア辞書は以下の URL からもダウンロードできます。
-コア辞書セット： http://www.info-proto.com/resource/geonlp/core-dics.tgz
-
-ダウンロードした zip ファイルは、 dict/zip/ の下に *.zip ファイルが配置されるように移動してください。
-
-% wget http://www.info-proto.com/resource/geonlp/core-dics.tgz
-% gzip -dc core-dics.tgz | tar xf -
-% ls -l dict/zip
-total 4796
--rwxr-xr-x 1 sagara users    2302 Sep 17 10:41 geonlp_japan_area_20130912_u.zip
--rwxr-xr-x 1 sagara users  258621 Sep 17 10:41 geonlp_japan_city_20130912_u.zip
--rwxr-xr-x 1 sagara users 4264467 Sep 17 10:41 geonlp_japan_oaza_20130913_u.zip
--rwxr-xr-x 1 sagara users    4534 Sep 17 10:41 geonlp_japan_pref_20130912_u.zip
--rwxr-xr-x 1 sagara users  359904 Sep 17 10:41 geonlp_japan_station_20130912_u.zip
--rwxr-xr-x 1 sagara users    7962 Sep 17 10:41 geonlp_world_country_20130912_u.zip
-
-
 □ パッケージのビルド
 
 autotool.sh スクリプトを実行してください。 autoconf 等を実行し、 configure スクリプトなど、コンパイルに必要なファイルを生成します。
@@ -48,6 +26,15 @@ autotool.sh スクリプトを実行してください。 autoconf 等を実行�
 % ./configure; make; make install
 
 を実行してください。
+
+
+□ 辞書データ
+
+GeoNLP 地名解析辞書は本パッケージには同梱していません。必要に応じて GeoNLP サーバからダウンロードする必要があります。
+GeoNLP サーバ： https://geonlp.ex.nii.ac.jp/
+
+このパッケージに含まれている管理用ツール geonlp-dic-util/geonlp-dic-util.php を利用すると、 GeoNLP サーバ上で公開されている辞書のダウンロードや更新、独自に作成した CSV データのインポートを対話的に行うことができます。
+
 
 □ ライセンス
 

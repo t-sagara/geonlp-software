@@ -15,6 +15,10 @@ $ export LD_LIBRARY_PATH=/usr/local/lib/boost_1.44:/usr/local/lib
 $ ./configure
 ...
 
+(3) move down to './geonlp-dic-util' directory and run
+% php geonlp-dic-util.php
+to download GeoNLP dictionaries.
+
 
 Generate and update the configure scripts:
 

@@ -1,0 +1,50 @@
+□ はじめに
+
+このパッケージは GeoNLP 辞書ツール（geonlp-dic-util）です。
+ GeoNLP サーバ上で公開されている辞書のダウンロードや更新、独自に作成した CSV データのインポートを対話的に行うことができます。
+
+□ 必要なツール
+
+このパッケージを利用するには、 PHP 5.3 以上が必要です。
+また、 sqlite3 モジュールが必要です。
+http://php.net/manual/en/book.sqlite3.php
+
+PHP 5.3 からは sqlite3 モジュールはデフォルトでインストールされますが、 Linux ディストリビューションによっては拡張モジュールとして別途インストールする必要がある場合があります。
+
+CentOS 5 の場合
+# yum install php53-pdo sqlite
+
+CentOS 6 の場合
+# yum install php-sqlite
+
+Ubuntu 12, 13 の場合
+# apt-get install php5-sqlite
+
+
+□ パッケージのビルド
+
+このパッケージは PHP スクリプトで書かれているため、ビルドの必要はありません。
+
+
+□ 実行方法
+
+このパッケージのトップディレクトリで geonlp-dic-util.php を実行します。
+
+% php geonlp-dic-util.php
+
+GeoNLP サーバで公開されている地名解析辞書一覧を取得するには、
+
+% php geonlp-dic-util.php list
+
+を実行してください。
+
+「geonlp/japan_station    日本の鉄道駅（2012年）」をダウンロードしたい場合は、
+
+% php geonlp-dic-util.php add geonlp/japan_station
+
+を実行してください。詳細はコマンドなしで geonlp-dic-util.php を実行した時に表示される使い方を参照してください。
+
+
+□ ライセンス
+
+本パッケージに含まれるソースコードのライセンスは GeoNLP software に準じます。
