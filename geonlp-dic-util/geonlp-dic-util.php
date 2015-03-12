@@ -3,6 +3,9 @@ namespace GeoNLP;
 require_once(dirname(__FILE__).'/lib/LocalRepository.php');
 require_once(dirname(__FILE__).'/lib/Utils.php');
 
+define('DEFAULT_GEONLP_SERVER', 'https://geonlp.ex.nii.ac.jp/api/dictionary');
+$geonlp_server = DEFAULT_GEONLP_SERVER;
+
 function get_arguments() {
   $options = array();
   $params  = array();
@@ -16,6 +19,14 @@ function get_arguments() {
     } else {
       $params []= $argv[$i];
     }
+  }
+  // GeoNLP サーバの設定
+  if (array_key_exists('server', $options)) {
+    if (substr($options['server'], strlen($options['server']) -1, 1) == '/') {
+      $options['server'] = substr($options['server'], 0, strlen($options['server']) - 1);
+    }
+    write_message(sprintf("サーバを '%s' に変更しました．\n", $options['server']));
+    $GLOBALS['geonlp_server'] = $options['server'];
   }
   return array('options'=>$options, 'params'=>$params);
 }
@@ -75,6 +86,12 @@ function usage() {
           辞書のみを対象とします．
           list, sync で機能します．
 
+  --server=<GeoNLP公開サーバの URL プレフィックス>
+          デフォルト: https://geonlp.ex.nii.ac.jp/api/dictionary
+          外部ネットワークに接続するためにプロキシサーバを
+          利用する必要がある場合などは，上記 URL に該当する
+          URL プレフィックスを指定してください．
+
 _USAGE_;
   write_message($msg);
 }
@@ -88,7 +105,12 @@ function main() {
   }
   $command = '\GeoNLP\geonlp_util_'.$args['params'][0];
   if (is_callable($command)) {
-    $result = $command($args);
+    try {
+      $result = $command($args);
+    } catch (\RuntimeException $e) {
+      write_message(sprintf("以下の例外が発生しました．\n『%s』\nエラーの箇所はファイル'%s'の%d行目です．\n", $e->getMessage(), $e->getFile(), $e->getLine()));
+      exit(0);
+    }
   } else {
     usage();
     die();
@@ -101,7 +123,11 @@ function main() {
  **/
 function geonlp_util_list($args) {
   $local = new LocalRepository($args);
-  $dics = $local->getDictionaries();
+  if (count($args['params']) == 1) {
+    $dics = $local->getDictionaries();
+  } else {
+    write_message("パラメータは無視されます．\n", array("status"=>"warning"));
+  }
   foreach ($dics as $id => $dic) {
     if (!$dic->isMatchConditions($args['options'])) {
       continue;
@@ -127,7 +153,7 @@ function geonlp_util_list($args) {
 function geonlp_util_show($args) {
   $local = new LocalRepository($args);
   if (count($args['params']) < 2) {
-    write_message("表示する辞書名を指定してください。例： php geonlp-dic-util show geonlp/world_country\n");
+    write_message("表示する辞書名を指定してください．\n例： php geonlp-dic-util.php show geonlp/world_country\n");
     usage(); die();
   }
   $dics = $local->getDictionaries();
@@ -148,7 +174,7 @@ function geonlp_util_show($args) {
       write_message(sprintf("状態：\t%s\n", $st));
       write_message($dic->info());
     } else {
-      write_message("辞書 '".$name."' が見つかりません。\n", array("status"=>"warning"));
+      write_message("辞書 '".$name."' が見つかりません．\n", array("status"=>"warning"));
     }
   }
 }
@@ -180,7 +206,7 @@ function geonlp_util_sync($args) {
 function geonlp_util_add($args) {
   $local = new LocalRepository($args);
   if (count($args['params']) < 2) {
-    write_message("追加する辞書名を指定してください。\n例1： php geonlp-dic-util add geonlp/world_country\n例2： php geonlp-dic-util add '/geonlp\/.*/'\n");
+    write_message("追加する辞書名を指定してください．\n例1： php geonlp-dic-util.php add geonlp/world_country\n例2： php geonlp-dic-util.php add '/geonlp\/.*/'\n");
     die();
   }
   $dics = $local->getDictionaries();
@@ -208,7 +234,7 @@ function geonlp_util_add($args) {
   }
   foreach ($installed as $pattern => $installed_dics) {
     if (count($installed_dics) == 0) {
-      write_message("辞書 '".$pattern."' が見つかりません。\n", array("status"=>"warning"));
+      write_message("辞書 '".$pattern."' が見つかりません．\n", array("status"=>"warning"));
     }
   }
 }
@@ -220,7 +246,7 @@ function geonlp_util_add($args) {
 function geonlp_util_delete($args) {
   $local = new LocalRepository($args);
   if (count($args['params']) < 2) {
-    write_message("削除する辞書名を指定してください。\n例1： php geonlp-dic-util delete geonlp/world_country\n例2： php geonlp-dic-util delete '/geonlp\/.*/'\n");
+    write_message("削除する辞書名を指定してください．\n例1： php geonlp-dic-util.php delete geonlp/world_country\n例2： php geonlp-dic-util.php delete '/geonlp\/.*/'\n");
     die();
   }
   $dics = $local->getDictionaries();
@@ -248,7 +274,7 @@ function geonlp_util_delete($args) {
   }
   foreach ($deleted as $pattern => $deleted_dics) {
     if (count($deleted_dics) == 0) {
-      write_message("辞書 '".$pattern."' が見つかりません。\n", array("status"=>"warning"));
+      write_message("辞書 '".$pattern."' が見つかりません．\n", array("status"=>"warning"));
     }
   }
 }
@@ -288,7 +314,7 @@ function geonlp_util_install($args) {
  **/
 function geonlp_util_import($args) {
   if (count($args['params']) != 3) {
-    write_message("辞書コードと CSV ファイル名を指定してください。\n例： php geonlp-dic-util import mylocation foo.csv\n");
+    write_message("辞書コードと CSV ファイル名を指定してください．\n例： php geonlp-dic-util.php import mylocation foo.csv\n");
     die();
   }
   $local = new LocalRepository($args);

@@ -46,34 +46,39 @@ class LocalRepository
   // データベースをセットする
   private function open_db() {
     if (isset($this->db)) {
-      $this->db->close();
+      $this->db = null;
     }
-    $this->db = new \SQLite3($this->wd.'/repository.sq3',
-			     SQLITE3_OPEN_READWRITE
-			     | SQLITE3_OPEN_CREATE);
+    $this->dsn = 'sqlite:'.$this->wd.'/repository.sq3';
+    $this->db = new \PDO($this->dsn);
     // テーブルが存在しない場合は作成する
     $this->db->exec("CREATE TABLE IF NOT EXISTS dictionary(id INTEGER PRIMARY KEY, name TEXT, updated INTEGER, enabled INTEGER, jsonfile TEXT, csvfile TEXT, json TEXT)");
   }
 
   // internal id （数値）を指定して登録済み地名辞書情報を取得する
   private function get_dicinfo_by_id($id) {
-    $query = sprintf("SELECT * FROM dictionary WHERE id=%d", $id);
-    $results = $this->db->query($query);
-    $result = $results->fetchArray();
+    $sth = $this->db->prepare("SELECT * FROM dictionary WHERE id = :id");
+    $sth->bindParam(':id', $id);
+    $sth->execute();
+    $result = $sth->fetch(\PDO::FETCH_ASSOC);
     return $result;
   }
 
   // internal id （数値）を指定して登録済み地名辞書情報を利用可能（不能）にする
   private function enable_dicinfo_by_id($id, $enable=1) {
-    $query = sprintf("UPDATE dictionary SET enabled=%d WHERE id=%d", $enable, $id);
-    return ($this->db->exec($query));
+    $sth = $this->db->prepare("UPDATE dictionary SET enabled = :enabled WHERE id = :id");
+    $sth->bindParam(':enabled', $enable);
+    $sth->bindParam(':id', $id);
+    $sth->execute();
+    $result = $sth->fetch(\PDO::FETCH_ASSOC);
+    return $result;
   }
 
   // 名前（文字列）を指定して登録済み地名辞書情報を取得する
   private function get_dicinfo_by_name($name) {
-    $query = sprintf("SELECT * FROM dictionary WHERE name='%s'", \SQLite3::escapeString($name));
-    $results = $this->db->query($query);
-    $result = $results->fetchArray();
+    $sth = $this->db->prepare("SELECT * FROM dictionary WHERE name = :name");
+    $sth->bindParam(':name', $name);
+    $sth->execute();
+    $result = $sth->fetch(\PDO::FETCH_ASSOC);
     return $result;
   }
 
@@ -82,26 +87,27 @@ class LocalRepository
     $dicinfo = $this->get_dicinfo_by_name($name);
     if ($dicinfo) {
       $min = $dicinfo['id'];
-      if ($min < 0) return $min;
+      if ($min < 0) return (int)$min;
       return FALSE; // ローカルではない辞書の名前と一致する
     }
-    $query = sprintf("SELECT min(id) FROM dictionary");
-    $min = $this->db->querySingle($query);
+    $sth = $this->db->prepare("SELECT min(id) FROM dictionary");
+    $sth->execute();
+    $min = $sth->fetchColumn();
     if (!$min || $min > 0) {
       $min = -1;
     } else {
       $min = $min - 1;
     }
-    return $min;
+    return (int)$min;
   }
 
   // 登録済み地名辞書情報の一覧を取得する
   public function get_dicinfo_list() {
     $dictionary_list = array();
     // クエリ
-    $query = "SELECT * FROM dictionary ORDER BY id ASC";
-    $results = $this->db->query($query);
-    while ($r = $results->fetchArray()) {
+    $sth = $this->db->prepare("SELECT * FROM dictionary ORDER BY id ASC");
+    $sth->execute();
+    while ($r = $sth->fetch(\PDO::FETCH_ASSOC)) {
       $dictionary_list []= $r;
     }
     return $dictionary_list;
@@ -123,6 +129,9 @@ class LocalRepository
       // Zip ファイルをダウンロードして保存する
       write_message(sprintf("- ZIP ファイルをダウンロードしています ..."));
       $url = $dic->getUrl();
+      if ($GLOBALS['geonlp_server'] != DEFAULT_GEONLP_SERVER) {
+	$url = preg_replace('!'.DEFAULT_GEONLP_SERVER.'!', $GLOBALS['geonlp_server'], $url);
+      }
       $zipcontent = \file_get_contents($url);
       $zipfile = $this->wd.'/zip/'.$id.'.zip';
       write_message(sprintf("\n- ファイル '%s' に保存します．\n", $zipfile));
@@ -152,10 +161,22 @@ class LocalRepository
       write_message(sprintf("- ローカルリポジトリに登録します．\n"));
       $updated = time();
       $name = $dic->getIdString();
-      $query = sprintf("INSERT OR IGNORE INTO dictionary (id, name, updated, enabled, jsonfile, csvfile, json) VALUES (%d, '%s', %d, 1, '%s', '%s', '%s')", $id, \SQLite3::escapeString($name), $updated, \SQLite3::escapeString($jsonfile), \SQLite3::escapeString($csvfile), \SQLite3::escapeString($json));
-      $this->db->exec($query);
-      $query = sprintf("UPDATE dictionary SET id=%d, name='%s', updated=%d, enabled=1, jsonfile='%s', csvfile='%s', json='%s' WHERE id=%d", $id, \SQLite3::escapeString($name), $updated, \SQLite3::escapeString($jsonfile), \SQLite3::escapeString($csvfile), \SQLite3::escapeString($json), $id);
-      $this->db->exec($query);
+      $sth = $this->db->prepare("INSERT OR IGNORE INTO dictionary (id, name, updated, enabled, jsonfile, csvfile, json) VALUES (:id, :name, :updated, 1, :jsonfile, :csvfile, :json)");
+      $sth->bindParam(':id', $id);
+      $sth->bindParam(':name', $name);
+      $sth->bindParam(':updated', $updated);
+      $sth->bindParam(':jsonfile', $jsonfile);
+      $sth->bindParam(':csvfile', $csvfile);
+      $sth->bindParam(':json', $json);
+      $sth->execute();
+      $sth = $this->db->prepare("UPDATE dictionary SET name = :name, updated = :updated, enabled = 1, jsonfile = :jsonfile, csvfile = :csvfile, json = :json WHERE id = :id");
+      $sth->bindParam(':id', $id);
+      $sth->bindParam(':name', $name);
+      $sth->bindParam(':updated', $updated);
+      $sth->bindParam(':jsonfile', $jsonfile);
+      $sth->bindParam(':csvfile', $csvfile);
+      $sth->bindParam(':json', $json);
+      $sth->execute();
       write_message(sprintf("完了.\n"));
     } else {
       write_message("この辞書はローカル辞書です．\n", array("status"=>"warning"));
@@ -223,7 +244,7 @@ class LocalRepository
     $dictionary_list = $this->wd.'/dictionary_list.json';
     if (!file_exists($dictionary_list)
 	|| time() - filemtime($dictionary_list) > 3600) {
-      $response = file_get_contents('https://geonlp.ex.nii.ac.jp/api/dictionary');
+      $response = file_get_contents($endpoint);
       file_put_contents($dictionary_list, $response);
     }
     $dicts = GeoNLPDictionary::getDictionariesFromRepository($dictionary_list);
@@ -241,7 +262,7 @@ class LocalRepository
   // キャッシュファイルをクリアする
   private function cache_clear() {
     $dictionary_list = $this->wd.'/dictionary_list.json';
-    unlink($dictionary_list);
+    @unlink($dictionary_list);
   }
 
   // バイナリ地名辞書をコンパイルする
@@ -368,13 +389,13 @@ class LocalRepository
     }
     if (!is_null($dicinfo)) { // JSON ファイルを読み込んだ
       $dic = new GeoNLPDictionary($dicinfo);
-      if ($dic->getIdString()) {
-	throw new RuntimeError(sprintf("JSON ファイル '%s' 中，Identifier のフォーマットが正しくありません．", $code));
-      }
       $name = $dic->getIdString();
+      if (!$name) {
+	throw new RuntimeException(sprintf("JSON ファイル '%s' 中，Identifier のフォーマットが正しくありません．", $code));
+      }
     } else {
       if (!preg_match('/^[0-9A-Za-z\-_]{1,32}$/', $code)) {
-	throw new RuntimeError(sprintf("辞書コードは英数字，ハイフン，アンダーバーからなる32文字以内の文字列で指定してください．"));
+	throw new RuntimeException(sprintf("辞書コードは英数字，ハイフン，アンダーバーからなる32文字以内の文字列で指定してください．"));
       }
       $name = 'local/'.$code;
     }
@@ -382,7 +403,7 @@ class LocalRepository
     $new_id = $this->get_local_id($name);
     if ($new_id === FALSE) {
       $dic = $this->get_dictionary_from_dicinfo($dicinfo);
-      throw new RuntimeError(sprintf("辞書 '%s' はローカル辞書ではないため上書きできません．", $dic->getTitle()));
+      throw new RuntimeException(sprintf("辞書 '%s' はローカル辞書ではないため上書きできません．", $dic->getTitle()));
     }
     // 新規登録
     if (!$dic) {
@@ -392,6 +413,8 @@ class LocalRepository
       $properties['title'] = $code;
       $dic = new GeoNLPDictionary($properties);
     }
+    // 辞書情報（JSON）の設定
+    if (!$dicinfo) $dicinfo = $dic->getJsonProperty();
     $dic->setModified(@strftime("%Y-%m-%d %H:%M:%S", time()));
 
     // CSV の読み込み
@@ -421,7 +444,7 @@ class LocalRepository
     @mkdir($extract_dir);
     $path_name = str_replace('/', '-', $name);
     $jsonfile = $extract_dir.'/'.$path_name.'.json';
-    $json = $dic->getJsonProperty();
+    $json = json_encode($dicinfo);
     file_put_contents($jsonfile, $json);
 
     // CSV ファイル出力
@@ -481,10 +504,22 @@ class LocalRepository
     $csvfile = $path_name.'.csv';
     write_message(sprintf("- ローカルリポジトリに登録します．\n"));
     $updated = time();
-    $query = sprintf("INSERT OR IGNORE INTO dictionary (id, name, updated, enabled, jsonfile, csvfile, json) VALUES (%d, '%s', %d, 1, '%s', '%s', '%s')", $new_id, \SQLite3::escapeString($name), $updated, \SQLite3::escapeString($jsonfile), \SQLite3::escapeString($csvfile), \SQLite3::escapeString($json));
-    $this->db->exec($query);
-    $query = sprintf("UPDATE dictionary SET id=%d, name='%s', updated=%d, enabled=1, jsonfile='%s', csvfile='%s', json='%s' WHERE id=%d", $new_id, \SQLite3::escapeString($name), $updated, \SQLite3::escapeString($jsonfile), \SQLite3::escapeString($csvfile), \SQLite3::escapeString($json), $new_id);
-    $this->db->exec($query);
+    $sth = $this->db->prepare("INSERT OR IGNORE INTO dictionary (id, name, updated, enabled, jsonfile, csvfile, json) VALUES (:id, :name, :updated, 1, :jsonfile, :csvfile, :json)");
+    $sth->bindValue(':id', $new_id);
+    $sth->bindValue(':name', $name);
+    $sth->bindValue(':updated', $updated);
+    $sth->bindValue(':jsonfile', $jsonfile);
+    $sth->bindValue(':csvfile', $csvfile);
+    $sth->bindValue(':json', $json);
+    $sth->execute();
+    $sth = $this->db->prepare("UPDATE dictionary SET name = :name, updated = :updated, enabled = 1, jsonfile = :jsonfile, csvfile = :csvfile, json = :json WHERE id = :id");
+    $sth->bindValue(':id', $new_id);
+    $sth->bindValue(':name', $name);
+    $sth->bindValue(':updated', $updated);
+    $sth->bindValue(':jsonfile', $jsonfile);
+    $sth->bindValue(':csvfile', $csvfile);
+    $sth->bindValue(':json', $json);
+    $sth->execute();
     write_message(sprintf("完了.\n"));
   }
 }

@@ -178,8 +178,13 @@ class GeoNLPDictionary
    * 最新の辞書データを公開サーバから取得する
    * @param 辞書IDをキーとする GeoNLPDictionary の連想配列
    */
-  static public function getDictionariesFromRepository($uri = 'https://geonlp.ex.nii.ac.jp/api/dictionary') {
-    $response = file_get_contents($uri);
+  static public function getDictionariesFromRepository() {
+    $uri = $GLOBALS['geonlp_server'];
+    $response = @file_get_contents($uri);
+    if (!$response) {
+      write_message("GeoNLP サーバから辞書一覧を取得できませんでした．\n", array("status"=>"warning"));
+      return array();
+    }
     $r = json_decode($response, true);
     $dicts = array();
     foreach ($r['dictionaries'] as $d) {
