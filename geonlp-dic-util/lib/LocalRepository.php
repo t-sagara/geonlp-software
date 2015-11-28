@@ -244,7 +244,7 @@ class LocalRepository
     $dictionary_list = $this->wd.'/dictionary_list.json';
     if (!file_exists($dictionary_list)
 	|| time() - filemtime($dictionary_list) > 3600) {
-      $response = file_get_contents($endpoint);
+      $response = @file_get_contents($GLOBALS['geonlp_server']);
       file_put_contents($dictionary_list, $response);
     }
     $dicts = GeoNLPDictionary::getDictionariesFromRepository($dictionary_list);
@@ -350,16 +350,15 @@ class LocalRepository
 	write_message(sprintf("%s 作成 => %s\n", @strftime("%Y-%m-%d %H:%M:%S", filemtime($filepath)), $filepath));
       }
       if (!is_writable($default_filepath)) {
-	write_message(sprintf("インストール先ファイル %s は書き込み不可です\n", $default_filepath), array("status"=>"error"));
+	write_message(sprintf("! インストール先ファイル %s は書き込み不可です\n", $default_filepath), array("status"=>"error"));
 	$total_error['unwritable']++;
       }
-      write_message("\n");
     }
     if ($total_error['unreadable'] > 0) {
-      write_message("先に compile を実行し，バイナリ地名辞書を作成してください．\n", array("status"=>"error"));
+      write_message("! 先に compile を実行し，バイナリ地名辞書を作成してください．\n", array("status"=>"error"));
     }
     if ($total_error['unwritable'] > 0) {
-      write_message("インストール先ファイルを書き込み許可にするか，書き込み権限のあるユーザで実行してください．\n", array("status"=>"error"));
+      write_message("! インストール先ファイルを書き込み許可にするか，書き込み権限のあるユーザで実行してください．\n", array("status"=>"error"));
     }
     if ($total_error['unreadable'] > 0 || $total_error['unwritable'] > 0) return;
     
@@ -414,7 +413,7 @@ class LocalRepository
       $dic = new GeoNLPDictionary($properties);
     }
     // 辞書情報（JSON）の設定
-    if (!$dicinfo) $dicinfo = $dic->getJsonProperty();
+    if (!$dicinfo) $dicinfo = $dic->getProperty();
     $dic->setModified(@strftime("%Y-%m-%d %H:%M:%S", time()));
 
     // CSV の読み込み

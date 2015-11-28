@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<extension name="phpgeonlp" version="1.0.0">
+<extension name="phpgeonlp" version="1.1.0">
 	<summary>PHP GeoNLP Morphologic Analyzer</summary>
 	
 	<deps language="cpp" platform="unix">
@@ -246,7 +246,7 @@
 		
 		<!-- MAgetGeowordEntry()　メソッド -->
 		<function name="MAgetGeowordEntry">
-			<proto>object MAgetGeowordEntry(string geonlp_id)</proto>
+			<proto>mixed MAgetGeowordEntry(string geonlp_id)</proto>
 			<code>
 <![CDATA[
 	geonlp::Geoword gw;

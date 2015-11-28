@@ -82,8 +82,8 @@ class GeoNLPDictionary
     return FALSE;
   }
 
-  public function getJsonProperty() {
-    return json_encode($this->properties);
+  public function getProperty() {
+    return $this->properties;
   }
 
   // パス名を生成する
@@ -178,8 +178,8 @@ class GeoNLPDictionary
    * 最新の辞書データを公開サーバから取得する
    * @param 辞書IDをキーとする GeoNLPDictionary の連想配列
    */
-  static public function getDictionariesFromRepository() {
-    $uri = $GLOBALS['geonlp_server'];
+  static public function getDictionariesFromRepository($uri = NULL) {
+    if (is_null($uri)) $uri = $GLOBALS['geonlp_server'];
     $response = @file_get_contents($uri);
     if (!$response) {
       write_message("GeoNLP サーバから辞書一覧を取得できませんでした．\n", array("status"=>"warning"));
