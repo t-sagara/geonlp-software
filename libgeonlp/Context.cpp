@@ -5,6 +5,7 @@
 ///
 /// Copyright (c)2013, NII
 ///
+#include <config.h>
 #include <sstream>
 #include <cmath>
 #include "Context.h"
@@ -182,6 +183,13 @@ namespace geonlp
     } else {
       this->_topic_radius = 10.0; // 関心範囲のデフォルトは 10km
     }
+
+    // 空間的制約
+    if (this->_options.has_key("spatial-constraint")
+	&& !this->_options.is_null("spatial-constraint")) {
+      this->_spatial_constraint.set(this->_options.get_value("spatial-constraint"));
+    }
+
   }
 
   void Context::clear(void) {
@@ -524,11 +532,12 @@ namespace geonlp
 	Geoword bestGeoword;
 	picojson::value& v_geowords = (*it_geowords).second;
 	picojson::array& varray = v_geowords.get<picojson::array>();
+	std::vector<double> weights; // スコアに乗じるファクター
+	for (int i = 0; i < varray.size(); i++) weights.push_back(1.0); // 1.0 で初期化
 
 	// dist-server が指定されていれば分布情報保持サーバと通信して重みを取得
 	// note: host, path, port, method, がパラメータとして必ず含まれる
 	//       option は含まれていない可能性がある
-	std::vector<double> weights;
 	if (!this->_options.is_null("dist-server")) {
 	  picojson::ext e;
 	  picojson::ext op(this->_options.get_value("dist-server"));
@@ -565,6 +574,15 @@ namespace geonlp
 	  e = c.getJsonResponse();
 	  weights = e._get_double_list("result");
 	  // std::cout << "JSON_RESPONSE: '" << e.toJson() << "'" << std::endl;
+	}
+
+	// 空間的制約を適用
+	for (int i = 0; i < weights.size(); i++) {
+	  Geoword* pGeoword = (Geoword*)&(varray[i]);
+	  if (!pGeoword->isValid()) throw ContextException(pGeoword->toJson());
+	  double r = this->_spatial_constraint.judge(pGeoword);
+	  if (r < 0) weights[i] = -1.0;
+	  else weights[i] *= r;
 	}
 
 	// 個々の地名語のスコアを取得

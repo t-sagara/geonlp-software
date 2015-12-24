@@ -9,4 +9,4 @@ noinst_HEADERS = DBAccessor.h FileAccessor.h MeCabAdapter.h Suffix.h \
                  DartsException.h FormatException.h \
                  picojson.h picojsonExt.h CSVReader.h \
                  GeonlpService.h Context.h Classifier.h \
-                 JsonRpcClient.h
+                 JsonRpcClient.h SpatialConstraint.h

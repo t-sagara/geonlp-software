@@ -125,7 +125,7 @@ namespace geonlp
 #ifdef HAVE_LIBDAMS
       } else if (method == "addressGeocoding") {
 	result = this->addressGeocoding(params);
-#endif /* HAVE_LIBDAMS */	
+#endif /* HAVE_LIBDAMS */
       } else {
 	throw ServiceRequestFormatException("Unknown or not implemented method called.");
       }
@@ -289,6 +289,7 @@ namespace geonlp
       }
     }
 
+    // Version 1.1.0 の機能 
     if (op.has_key("topic-point")) {
       try {
 	this->_options.set_value("topic-point", op._get_double_list("topic-point"));
@@ -363,18 +364,30 @@ namespace geonlp
       this->_options.set_value("dist-server", o);
     }
 
+#ifdef HAVE_LIBGDAL
+    // Version 1.1.1 の機能
+    if (op.has_key("spatial-constraint")) {
+      this->_options.set_value("spatial-constraint", op.get_value("spatial-constraint"));
+    }
+#endif /* HAVE_LIBGDAL */
+
     // コンテキストにもオプションをセット
     this->_context.setOptions(this->_options);
   }
 
   // parse オプションのリセット
   void Service::reset_options(void) {
-    this->_options.set_value("geocoding", "normal");
     this->_options.set_value("adjunct", false);
     this->_options.set_value("threshold", 0);
     this->_options.set_value("show-score", false);
     this->_options.set_value("show-candidate", false);
     this->_options.set_value("dist-server", picojson::null());
+#ifdef HAVE_LIBDAMS
+    this->_options.set_value("geocoding", "normal");
+#endif /* HAVE_LIBDAMS */
+#ifdef HAVE_LIBGDAL
+    this->_options.set_value("spatial-constraint", picojson::null());
+#endif /* HAVE_LIBGDAL */
     this->_ma_ptr->resetActiveDictionaries();
     this->_ma_ptr->resetActiveClasses();
     this->_context.setOptions(this->_options);

@@ -2,14 +2,14 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.61])
-AC_INIT([geonlp], [1.1.0], [geonlp@info-proto.com])
-AM_INIT_AUTOMAKE([geonlp], [1.1.0])
+AC_INIT([geonlp], [1.1.1], [geonlp@info-proto.com])
+AM_INIT_AUTOMAKE([geonlp], [1.1.1])
 AC_CONFIG_SRCDIR([src/])
 AC_CONFIG_HEADER([include/config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 # library version
-LIB_VERSION_INFO='1.1.0'
+LIB_VERSION_INFO='1.1.1'
 AC_SUBST(LIB_VERSION_INFO)
 
 # Checks for programs.
@@ -105,6 +105,32 @@ AS_IF([test "x$with_dams" != xyes],
 )
 AC_SUBST(LIBDAMS_LIB)
 AC_SUBST(DAMS_INC_FLAGS)
+
+# GDAL installation settings
+AC_ARG_WITH(
+   gdal-config,
+   [  --with-gdal-config=PATH  set gdal-config location [search path]],
+   AC_MSG_RESULT(using $with_gdal_config for gdal-config)
+   GDAL_CONFIG=$with_gdal_config,
+   [AC_PATH_PROGS(GDAL_CONFIG, gdal-config, no)]
+)
+
+if test $GDAL_CONFIG = "no";
+then
+   AC_MSG_ERROR(gdal-config is not found in your system)
+fi
+AC_SUBST(GDAL_CONFIG)
+
+GDAL_INC_FLAGS="`$GDAL_CONFIG --cflags`"
+AC_SUBST(GDAL_INC_FLAGS)
+
+AC_HAVE_LIBRARY([gdal],
+  AC_DEFINE([HAVE_LIBGDAL], [1], [Define if you have libgdal])
+  LIBGDAL_LIB="`$GDAL_CONFIG --libs`",
+  AC_MSG_ERROR(*** GDAL library not found ***)
+)
+AC_SUBST(LIBGDAL_LIB)
+
 
 # misc libraries
 AC_CHECK_LIB([iconv], [iconv_open])
