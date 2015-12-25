@@ -7,7 +7,7 @@
 #include "GeonlpService.h"
 
 int main(int argc, char** argv) {
-  geonlp::ServicePtr service = geonlp::createService("dba.rc");
+  geonlp::ServicePtr service = geonlp::createService();
   picojson::array params;
   picojson::value v;
   picojson::ext p;
@@ -176,4 +176,5 @@ int main(int argc, char** argv) {
   v = service->addressGeocoding(params);
   std::cout << v.serialize() << std::endl;
 
+  delete service;
 }

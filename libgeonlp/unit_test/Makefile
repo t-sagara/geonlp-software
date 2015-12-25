@@ -1,16 +1,16 @@
 CXX = g++
-CXXFLAGS = -g -DPROFILE_DEFAULT_DIR_PATH=\"/usr/local/etc\" -I../../include
+CXXFLAGS = -g -DPROFILE_DEFAULT_DIR_PATH=\"/usr/local/etc\" -DPACKAGE_NAME=\"geonlp\" -I../../include -I/usr/include/gdal
 #CXXFLAGS = -g -DHAVE_LIBDAMS -DPROFILE_DEFAULT_DIR_PATH=\"/usr/local/etc\" -I../../include
 #CXXFLAGS = -g -DDEBUG -DHAVE_LIBDAMS -DPROFILE_DEFAULT_DIR_PATH=\"/usr/local/etc\" -I../../include
 #CXXFLAGS = -pg -DPROFILE_DEFAULT_DIR_PATH=\"/usr/local/etc\" -I../../include
-LFLAGS   = -lsqlite3 -lboost_regex -lboost_filesystem -lmecab -L/data/geonlp/lib -ldams
+LFLAGS   = -lsqlite3 -lboost_regex -lboost_filesystem -lmecab -L/data/geonlp/lib -ldams -lgdal
 #LFLAGS   = -lsqlite3 -lboost_regex -lboost_filesystem -lmecab
 
 OBJS     = ../picojsonExt.o ../Geoword.o ../Address.o ../Dictionary.o \
         ../Profile.o ../DBAccessor.o ../CSVReader.o \
 	../FileAccessor.o ../GeonlpMA.o ../GeonlpMAImplSq3.o ../Node.o ../NodeExt.o ../MeCabAdapter.o \
 	../PHBSDefs.o ../GeowordFormatter.o ../GeonlpService.o ../Context.o ../Classifier.o ../Util.o \
-	../JsonRpcClient.o
+	../JsonRpcClient.o ../SpatialCondition.o
 
 test_picojson:	test_picojson.cpp $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ test_picojson.cpp $(OBJS) $(LFLAGS)

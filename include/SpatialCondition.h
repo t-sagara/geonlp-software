@@ -1,13 +1,13 @@
 ///
 /// @file
-/// @brief  空間的制約 SpatialConstraint の定義
+/// @brief  空間的条件 SpatialCondition の定義
 /// @author 株式会社情報試作室
 ///
 /// Copyright (c)2015, NII
 ///
 
-#ifndef _SPATIAL_CONSTRAINT_H
-#define _SPATIAL_CONSTRAINT_H
+#ifndef _SPATIAL_CONDITION_H
+#define _SPATIAL_CONDITION_H
 
 #include <string>
 #include <vector>
@@ -24,14 +24,14 @@
 namespace geonlp
 {
   // 例外クラス
-  class SpatialConstraintException:public std::runtime_error {
+  class SpatialConditionException:public std::runtime_error {
   public:
-  SpatialConstraintException(const std::string& message): runtime_error(message) {}
-    ~SpatialConstraintException() throw() {}
+  SpatialConditionException(const std::string& message): runtime_error(message) {}
+    ~SpatialConditionException() throw() {}
   };
 
   // 空間的な検索条件、重みづけなどの制約を管理するクラス
-  class SpatialConstraint {
+  class SpatialCondition {
   private:
 
 #ifdef HAVE_LIBGDAL
@@ -44,13 +44,10 @@ namespace geonlp
 
   public:
     // コンストラクタ
-    SpatialConstraint() {
-#ifdef HAVE_LIBGDAL
-      this->_ogrDataSources.clear();
-      this->_tmpfiles.clear();
-      OGRRegisterAll();
-#endif /* HAVE_LIBGDAL */    
-    }
+    SpatialCondition();
+
+    // デストラクタ
+    ~SpatialCondition();
 
     // JSON オプションパラメータから条件を構築
     void set(const picojson::value& options);
@@ -63,4 +60,4 @@ namespace geonlp
   }; /* class */
 
 } /* namespace */
-#endif /* _SPATIAL_CONSTRAINT_H */
+#endif /* _SPATIAL_CONDITION_H */

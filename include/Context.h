@@ -16,7 +16,7 @@
 #include "picojsonExt.h"
 #include "Geoword.h"
 #include "Address.h"
-#include "SpatialConstraint.h"
+#include "SpatialCondition.h"
 
 namespace geonlp
 {
@@ -105,8 +105,8 @@ namespace geonlp
     std::vector<double> _topic_coords;
     double _topic_radius;
 
-    // 空間的制約
-    SpatialConstraint _spatial_constraint;
+    // 空間的条件
+    SpatialCondition _spatial_condition;
 
     picojson::array _nodes;                 // parseNode の結果、全地名語候補を含む
     picojson::ext _options;          // parse オプション

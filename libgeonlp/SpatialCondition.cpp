@@ -1,6 +1,6 @@
 ///
 /// @file
-/// @brief  空間的制約 SpatialConstraint の実装
+/// @brief  空間的条件 SpatialCondition の実装
 /// @author 株式会社情報試作室
 ///
 /// Copyright (c)2015, NII
@@ -12,13 +12,27 @@
 #include <iostream>
 #include <fstream>
 #include "picojson.h"
-#include "SpatialConstraint.h"
+#include "SpatialCondition.h"
 
 namespace geonlp
 {
+
+  // コンストラクタ
+  SpatialCondition::SpatialCondition() {
+#ifdef HAVE_LIBGDAL
+    this->_ogrDataSources.clear();
+    this->_tmpfiles.clear();
+    OGRRegisterAll();
+#endif /* HAVE_LIBGDAL */    
+  }
+
+  // デストラクタ
+  SpatialCondition::~SpatialCondition() {
+    OGRCleanupAll();
+  }
   
   // データソースを追加する
-  int SpatialConstraint::add_data_source(const std::string& url) {
+  int SpatialCondition::add_data_source(const std::string& url) {
 #ifdef HAVE_LIBGDAL
     OGRSFDriver* poDriver;
     OGRDataSource* poDataSource;
@@ -26,7 +40,7 @@ namespace geonlp
     if (poDataSource == NULL) {
       std::stringstream ss;
       ss << "Fail to read spatial-constraint data, url:'" << url << "'";
-      throw SpatialConstraintException(ss.str());
+      throw SpatialConditionException(ss.str());
     }
     // std::cerr << "Successfully read " << url << "." << std::endl;
     this->_ogrDataSources.push_back(poDataSource);
@@ -34,8 +48,9 @@ namespace geonlp
   }
 
   // GeoJSON を追加する
-  int SpatialConstraint::add_geojson_source(const picojson::value& v) {
-    std::string tmp_filename = std::tmpnam(NULL);
+  int SpatialCondition::add_geojson_source(const picojson::value& v) {
+    std::string tmp_filename = "geonlp_tmp_";
+    tmp_filename += std::tmpnam(NULL);
     tmp_filename = tmp_filename + ".geojson";
     std::ofstream ofs;
     ofs.open(tmp_filename.c_str(), std::ios::out);
@@ -46,7 +61,7 @@ namespace geonlp
   }
 
   // JSON オプションパラメータから条件を構築
-  void SpatialConstraint::set(const picojson::value& options) {
+  void SpatialCondition::set(const picojson::value& options) {
 #ifdef HAVE_LIBGDAL
     if (this->_ogrDataSources.size() > 0) {
       // 読み込み済みのデータソースをクリアする
@@ -86,10 +101,10 @@ namespace geonlp
   }
 
 
-  // Geoword が制約を満たすかどうかを判定する
+  // Geoword が条件を満たすかどうかを判定する
   // 0または正の値を返した場合にはスコアに乗じる重み
-  // 負の値を返した場合には制約条件を満たさない
-  double SpatialConstraint::judge(const Geoword* pGeoword) {
+  // 負の値を返した場合には条件を満たさない
+  double SpatialCondition::judge(const Geoword* pGeoword) {
     double result = 1.0;
 #ifdef HAVE_LIBGDAL
     // std::cerr << "#sources = " << this->_ogrDataSources.size() << std::endl;

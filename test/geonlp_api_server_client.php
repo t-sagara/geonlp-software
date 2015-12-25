@@ -42,9 +42,9 @@ $requests[] = <<< EOS
 }
 EOS;
 
-foreach ($requests as $i => $request) {
-  $request .= "{EOR}";
-
+function request($sentence) {
+  global $socket;
+  $request = $sentence . "{EOR}";
   echo ">>> Sending request...";
   socket_write($socket, $request, strlen($request));
   echo "OK.\n";
@@ -57,6 +57,26 @@ foreach ($requests as $i => $request) {
       break;
     }
   }
+}
+
+foreach ($requests as $i => $request) {
+  request($request);
+}
+
+while ($line = fgets(STDIN)) {
+  $line = trim($line);
+  if ($line == "exit" || $line == "quit") break;
+  $request = <<< EOS
+{
+  "method": "geonlp.parse",
+  "params":
+    [
+      "{$line}", { "geocoding":true }
+    ],
+  "id": "2"
+}
+EOS;
+  request($request);
 }
 
 echo ">>> Closing socket...";

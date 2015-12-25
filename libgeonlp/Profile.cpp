@@ -9,6 +9,7 @@
 #include "Profile.h"
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/algorithm/string.hpp>
+#include <iostream>
 #include "config.h"
 #include "stdio.h"
 
@@ -26,7 +27,7 @@ namespace geonlp {
     std::string filename;
     std::string rcfilepath = "";
     std::string ext(PROFILE_FILE_EXT);
-    if (basename.substr(basename.length() - ext.length()) != ext)
+    if (basename.length() < ext.length() || basename.substr(basename.length() - ext.length()) != ext)
       filename = basename + ext;
     else 
       filename = basename;

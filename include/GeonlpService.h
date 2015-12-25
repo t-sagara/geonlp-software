@@ -108,6 +108,13 @@ namespace geonlp
       this->reset_options(); // コンテキストのオプションも初期化される
     }
 
+    // デストラクタ
+    ~Service() {
+#ifdef HAVE_LIBDAMS
+      damswrapper::final(); // DAMS を終了する
+#endif /* HAVE_LIBDAMS */
+    }
+
     inline std::string version(void) { return std::string(PACKAGE_VERSION); }
 
     // 拡張形態素解析器 (MA）インタフェースの取得
@@ -191,7 +198,8 @@ namespace geonlp
   }; /* class Service */
 
   // Service へのポインタ
-  typedef boost::shared_ptr<Service> ServicePtr;
+  // typedef boost::shared_ptr<Service> ServicePtr;
+  typedef Service* ServicePtr;
 
   /// @brief Service への共有ポインタ取得する
   /// @arg @c profile プロファイル名

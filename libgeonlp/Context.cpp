@@ -185,9 +185,9 @@ namespace geonlp
     }
 
     // 空間的制約
-    if (this->_options.has_key("spatial-constraint")
-	&& !this->_options.is_null("spatial-constraint")) {
-      this->_spatial_constraint.set(this->_options.get_value("spatial-constraint"));
+    if (this->_options.has_key("spatial-condition")
+	&& !this->_options.is_null("spatial-condition")) {
+      this->_spatial_condition.set(this->_options.get_value("spatial-condition"));
     }
 
   }
@@ -580,7 +580,7 @@ namespace geonlp
 	for (int i = 0; i < weights.size(); i++) {
 	  Geoword* pGeoword = (Geoword*)&(varray[i]);
 	  if (!pGeoword->isValid()) throw ContextException(pGeoword->toJson());
-	  double r = this->_spatial_constraint.judge(pGeoword);
+	  double r = this->_spatial_condition.judge(pGeoword);
 	  if (r < 0) weights[i] = -1.0;
 	  else weights[i] *= r;
 	}

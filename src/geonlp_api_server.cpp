@@ -6,6 +6,10 @@
 #include <boost/thread.hpp>
 #include "GeonlpService.h"
 
+// for memory usage check
+#include <sys/time.h>
+#include <sys/resource.h>
+
 // Max buffer size
 const int max_length = 1024;
 
@@ -78,6 +82,14 @@ void session(socket_ptr sock)
 	result += EOR_SEQ;
 	boost::asio::write(*sock, boost::asio::buffer(result.c_str(), result.length()));
       }
+
+      struct rusage r;
+      if (getrusage(RUSAGE_SELF, &r) != 0) {
+	std::cerr << "getrusage failed." << std::endl;
+      } else {
+	std::cerr << "maxrss=" << r.ru_maxrss << std::endl;
+      }
+
     }
   }
   catch (std::exception& e)
@@ -91,6 +103,7 @@ void server(boost::asio::io_service& io_service, short port)
   tcp::acceptor a(io_service, tcp::endpoint(tcp::v4(), port));
   for (;;)
   {
+
     socket_ptr sock(new tcp::socket(io_service));
     a.accept(*sock);
     boost::thread t(boost::bind(session, sock));
@@ -137,6 +150,8 @@ int main(int argc, char* argv[])
   {
     std::cerr << "Exception: " << e.what() << "\n";
   }
+
+  delete service;
 
   return 0;
 }
