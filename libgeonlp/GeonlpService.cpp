@@ -364,12 +364,16 @@ namespace geonlp
       this->_options.set_value("dist-server", o);
     }
 
-#ifdef HAVE_LIBGDAL
     // Version 1.1.1 の機能
-    if (op.has_key("spatial-constraint")) {
-      this->_options.set_value("spatial-constraint", op.get_value("spatial-constraint"));
+#ifdef HAVE_LIBGDAL
+    if (op.has_key("spatial-condition")) {
+      this->_options.set_value("spatial-condition", op.get_value("spatial-condition"));
     }
 #endif /* HAVE_LIBGDAL */
+    
+    if (op.has_key("temporal-condition")) {
+      this->_options.set_value("temporal-condition", op.get_value("temporal-condition"));
+    }
 
     // コンテキストにもオプションをセット
     this->_context.setOptions(this->_options);
@@ -386,8 +390,9 @@ namespace geonlp
     this->_options.set_value("geocoding", "normal");
 #endif /* HAVE_LIBDAMS */
 #ifdef HAVE_LIBGDAL
-    this->_options.set_value("spatial-constraint", picojson::null());
+    this->_options.set_value("spatial-condition", picojson::null());
 #endif /* HAVE_LIBGDAL */
+    this->_options.set_value("temporal-condition", picojson::null());
     this->_ma_ptr->resetActiveDictionaries();
     this->_ma_ptr->resetActiveClasses();
     this->_context.setOptions(this->_options);

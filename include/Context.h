@@ -17,6 +17,7 @@
 #include "Geoword.h"
 #include "Address.h"
 #include "SpatialCondition.h"
+#include "TemporalCondition.h"
 
 namespace geonlp
 {
@@ -108,7 +109,10 @@ namespace geonlp
     // 空間的条件
     SpatialCondition _spatial_condition;
 
-    picojson::array _nodes;                 // parseNode の結果、全地名語候補を含む
+    // 時間的条件
+    TemporalCondition _temporal_condition;
+
+    picojson::array _nodes;          // parseNode の結果、全地名語候補を含む
     picojson::ext _options;          // parse オプション
 
     // @brief Geoword を一つコンテキスト関係に登録する

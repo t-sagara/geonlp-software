@@ -39,7 +39,7 @@ namespace geonlp
     poDataSource = OGRSFDriverRegistrar::Open(url.c_str(), FALSE, &(poDriver));
     if (poDataSource == NULL) {
       std::stringstream ss;
-      ss << "Fail to read spatial-constraint data, url:'" << url << "'";
+      ss << "Fail to read spatial-condition data, url:'" << url << "'";
       throw SpatialConditionException(ss.str());
     }
     // std::cerr << "Successfully read " << url << "." << std::endl;
@@ -49,9 +49,8 @@ namespace geonlp
 
   // GeoJSON を追加する
   int SpatialCondition::add_geojson_source(const picojson::value& v) {
-    std::string tmp_filename = "geonlp_tmp_";
-    tmp_filename += std::tmpnam(NULL);
-    tmp_filename = tmp_filename + ".geojson";
+    std::string tmp_filename = std::tmpnam(NULL);
+    tmp_filename += "_geonlp_tmp.geojson";
     std::ofstream ofs;
     ofs.open(tmp_filename.c_str(), std::ios::out);
     ofs << v.serialize();

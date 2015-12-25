@@ -184,10 +184,16 @@ namespace geonlp
       this->_topic_radius = 10.0; // 関心範囲のデフォルトは 10km
     }
 
-    // 空間的制約
+    // 空間的条件
     if (this->_options.has_key("spatial-condition")
 	&& !this->_options.is_null("spatial-condition")) {
       this->_spatial_condition.set(this->_options.get_value("spatial-condition"));
+    }
+
+    // 時間的条件
+    if (this->_options.has_key("temporal-condition")
+	&& !this->_options.is_null("temporal-condition")) {
+      this->_temporal_condition.set(this->_options.get_value("temporal-condition"));
     }
 
   }
@@ -576,13 +582,21 @@ namespace geonlp
 	  // std::cout << "JSON_RESPONSE: '" << e.toJson() << "'" << std::endl;
 	}
 
-	// 空間的制約を適用
+	// 時空間条件を適用
 	for (int i = 0; i < weights.size(); i++) {
 	  Geoword* pGeoword = (Geoword*)&(varray[i]);
 	  if (!pGeoword->isValid()) throw ContextException(pGeoword->toJson());
-	  double r = this->_spatial_condition.judge(pGeoword);
-	  if (r < 0) weights[i] = -1.0;
-	  else weights[i] *= r;
+	  double rt = this->_temporal_condition.judge(pGeoword);
+	  if (rt < 0) {
+	    weights[i] = -1.0;
+	  } else {
+	    double rs = this->_spatial_condition.judge(pGeoword);
+	    if (rs < 0) {
+	      weights[i] = -1.0;
+	    } else {
+	      weights[i] *= rs * rt;
+	    }
+	  }
 	}
 
 	// 個々の地名語のスコアを取得
