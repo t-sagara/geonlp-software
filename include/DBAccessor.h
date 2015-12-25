@@ -9,6 +9,8 @@
 #ifndef _DBACCESSOR_H
 #define _DBACCESSOR_H
 
+#define GEOWORD_CACHE_SIZE  1000
+
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include "Profile.h"

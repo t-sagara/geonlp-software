@@ -6,6 +6,10 @@
 #include <sstream>
 #include "GeonlpMA.h"
 
+// for memory usage check
+#include <sys/time.h>
+#include <sys/resource.h>
+
 void show_dics(geonlp::MAPtr ma) {
   const std::map<int, geonlp::Dictionary>& dics = ma->getActiveDictionaries();
   std::cout << "Active Dictionary" << std::endl;
@@ -42,7 +46,7 @@ void show_parse_result(geonlp::MAPtr ma, std::vector<geonlp::Node>& nodes) {
 int main(int argc, char** argv) {
   std::string query("東京都、千代田区、多摩市、一ツ橋２－１－２、神保町駅");
   std::string res;
-  geonlp::MAPtr ma = geonlp::createMA(); //"dba.rc");
+  geonlp::MAPtr ma = geonlp::createMA();
   std::vector<int> new_dics;
   std::vector<std::string> new_classes;
 
@@ -105,8 +109,8 @@ int main(int argc, char** argv) {
     std::cout << (*it).second.toJson() << std::endl;
   }
 
-  /* uncomment to check in interactive way
   for (;;) {
+    std::cout << "Sentence:";
     std::string line;
     std::getline( std::cin, line);
     if (line.length() == 0) break;
@@ -118,7 +122,15 @@ int main(int argc, char** argv) {
     // parseNode
     std::vector<geonlp::Node> nodes;
     show_parse_result(ma, nodes);
+
+    struct rusage r;
+    if (getrusage(RUSAGE_SELF, &r) != 0) {
+      std::cerr << "getrusage failed." << std::endl;
+    } else {
+      std::cerr << "maxrss=" << r.ru_maxrss << std::endl;
+    }
   }
-  */
-  
+
+  ma = geonlp::MAPtr();
+
 }

@@ -10,7 +10,7 @@ OBJS     = ../picojsonExt.o ../Geoword.o ../Address.o ../Dictionary.o \
         ../Profile.o ../DBAccessor.o ../CSVReader.o \
 	../FileAccessor.o ../GeonlpMA.o ../GeonlpMAImplSq3.o ../Node.o ../NodeExt.o ../MeCabAdapter.o \
 	../PHBSDefs.o ../GeowordFormatter.o ../GeonlpService.o ../Context.o ../Classifier.o ../Util.o \
-	../JsonRpcClient.o ../SpatialCondition.o
+	../JsonRpcClient.o ../SpatialCondition.o ../TemporalCondition.o
 
 test_picojson:	test_picojson.cpp $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ test_picojson.cpp $(OBJS) $(LFLAGS)

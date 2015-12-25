@@ -1275,7 +1275,7 @@ namespace geonlp
 
   void DBAccessor::addGeowordToCache(const Geoword& geoword) {
     if (!geoword.isValid()) return;
-    if (DBAccessor::geoword_cache.size() == 100) DBAccessor::clearGeowordCache();
+    if (DBAccessor::geoword_cache.size() > GEOWORD_CACHE_SIZE) DBAccessor::clearGeowordCache();
     const std::string& geonlp_id = geoword.get_geonlp_id();
     DBAccessor::geoword_cache[geonlp_id] = geoword;
   }

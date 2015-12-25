@@ -101,7 +101,7 @@ namespace geonlp
     std::vector<std::string> add_list;
     std::vector<std::string> remove_list;
     std::stringstream ss;
-    int v;
+    int v = 0;
 
     // 辞書は ID の配列で指定する
     this->defaultDictionaries.clear();
@@ -144,6 +144,10 @@ namespace geonlp
     if (dap.get()) {
       ; // darts はクローズ処理不要？
     }
+#ifdef HAVE_LIBDAMS
+    damswrapper::final();
+#endif /* HAVE_LIBDAMS */
+
   }
 
   /// @brief ID で指定した辞書情報を取得する

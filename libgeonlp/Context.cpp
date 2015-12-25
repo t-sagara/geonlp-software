@@ -214,6 +214,8 @@ namespace geonlp
     this->_cumulative_points = 0;
     this->_topic_coords.clear();
     this->_topic_radius = -1.0;
+    this->_spatial_condition.set(picojson::value());
+    this->_temporal_condition.set(picojson::value());
   }
 
   // Geoword を一つコンテキスト関係に登録する

@@ -199,7 +199,7 @@ namespace geonlp
 
   // Service へのポインタ
   // typedef boost::shared_ptr<Service> ServicePtr;
-  typedef Service* ServicePtr;
+  typedef boost::shared_ptr<Service> ServicePtr;
 
   /// @brief Service への共有ポインタ取得する
   /// @arg @c profile プロファイル名

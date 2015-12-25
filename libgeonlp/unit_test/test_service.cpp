@@ -176,5 +176,5 @@ int main(int argc, char** argv) {
   v = service->addressGeocoding(params);
   std::cout << v.serialize() << std::endl;
 
-  delete service;
+  service = geonlp::ServicePtr(); // release shared pointer
 }
