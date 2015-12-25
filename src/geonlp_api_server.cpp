@@ -22,10 +22,13 @@ const std::string EOR_SEQ("{EOR}");
 // End of Connection sequence
 const std::string EOC_SEQ("{EOC}");
 
-using boost::asio::ip::tcp;
-typedef boost::shared_ptr<tcp::socket> socket_ptr;
+// GeonlpService instance
 geonlp::ServicePtr service;
 
+using boost::asio::ip::tcp;
+typedef boost::shared_ptr<tcp::socket> socket_ptr;
+
+// Show usage
 void usage(const char* cmd) {
   std::cerr << "Usage: " << cmd << " [--rc=<rc filename>] [--port=<port>]" << std::endl;
   std::cerr << "or, " << cmd << " --version" << std::endl;
@@ -33,6 +36,7 @@ void usage(const char* cmd) {
   return;
 }
 
+// Process GeoNLP JSON request
 std::string proc(std::string request) {
   picojson::ext req;
   picojson::value res;
@@ -45,8 +49,10 @@ std::string proc(std::string request) {
   return response;
 }
 
+// Start a new session as a thread
 void session(socket_ptr sock)
 {
+
   try
   {
     int pos;
@@ -95,15 +101,19 @@ void session(socket_ptr sock)
   catch (std::exception& e)
   {
     std::cerr << "Exception in thread: " << e.what() << "\n";
+    picojson::ext jsonResult(std::string("{\"error\":null,\"id\":\"NA\",\"result\":null}"));
+    jsonResult.set_value("error", e.what());
+    std::string result = jsonResult.toJson() + EOR_SEQ;
+    boost::asio::write(*sock, boost::asio::buffer(result.c_str(), result.length()));
   }
 }
 
+// Start a new thread which waits for a connection
 void server(boost::asio::io_service& io_service, short port)
 {
   tcp::acceptor a(io_service, tcp::endpoint(tcp::v4(), port));
   for (;;)
   {
-
     socket_ptr sock(new tcp::socket(io_service));
     a.accept(*sock);
     boost::thread t(boost::bind(session, sock));
@@ -132,6 +142,8 @@ int main(int argc, char* argv[])
     }
 
     try {
+      // Create a GeoNLP service as a test
+      // The service will be destoyed immediately
       if (rcfilename == "") {
 	service = geonlp::createService();
       } else {
@@ -143,7 +155,6 @@ int main(int argc, char* argv[])
     }
 
     boost::asio::io_service io_service;
-
     server(io_service, port);
   }
   catch (std::exception& e)
