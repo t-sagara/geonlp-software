@@ -16,10 +16,13 @@
 		<with name="boost_include" defaults="/usr/include:/usr/local/include:/usr/local/boost/include" testfile="boost/shared_ptr.hpp">
 			<header name="boost/shared_ptr.hpp" path="."/>
 		</with>
-		<with name="geonlp" defaults="../.." testfile="include/GeonlpService.h">
-			<header name="GeonlpService.h"/>
-			<header name="Node.h"/>
-			<header name="Exception.h"/>
+		<with name="gdal_include" defaults="/usr/include/gdal:/usr/local/include/gdal" testfile="gdal.h">
+		        <header name="ogr_api.h" path="." />
+		</with>
+		<with name="geonlp" defaults="../../" testfile="include/GeonlpService.h">
+			<header name="GeonlpService.h" />
+			<header name="Node.h" />
+			<header name="Exception.h" />
 			<lib name="geonlp" platform="unix"/>
 		</with>
 	</deps>

@@ -184,16 +184,53 @@ namespace geonlp
       this->_topic_radius = 10.0; // 関心範囲のデフォルトは 10km
     }
 
-    // 空間的条件
-    if (this->_options.has_key("spatial-condition")
-	&& !this->_options.is_null("spatial-condition")) {
-      this->_spatial_condition.set(this->_options.get_value("spatial-condition"));
+    // geo-contains
+    if (!this->_options.is_null("geo-contains")) {
+      SelectCondition* c = new SelectConditionGeoContains();
+      c->set(this->_options);
+      this->_select_conditions.push_back(c);
     }
 
-    // 時間的条件
-    if (this->_options.has_key("temporal-condition")
-	&& !this->_options.is_null("temporal-condition")) {
-      this->_temporal_condition.set(this->_options.get_value("temporal-condition"));
+    // geo-disjoint
+    if (!this->_options.is_null("geo-disjoint")) {
+      SelectCondition* c = new SelectConditionGeoDisjoint();
+      c->set(this->_options);
+      this->_select_conditions.push_back(c);
+    }
+
+    // time-exists
+    if (!this->_options.is_null("time-exists")) {
+      SelectCondition* c = new SelectConditionTimeExists();
+      c->set(this->_options);
+      this->_select_conditions.push_back(c);
+    }
+
+    // time-before
+    if (!this->_options.is_null("time-before")) {
+      SelectCondition* c = new SelectConditionTimeBefore();
+      c->set(this->_options);
+      this->_select_conditions.push_back(c);
+    }
+
+    // time-after
+    if (!this->_options.is_null("time-after")) {
+      SelectCondition* c = new SelectConditionTimeAfter();
+      c->set(this->_options);
+      this->_select_conditions.push_back(c);
+    }
+
+    // time-overlaps
+    if (!this->_options.is_null("time-overlaps")) {
+      SelectCondition* c = new SelectConditionTimeOverlaps();
+      c->set(this->_options);
+      this->_select_conditions.push_back(c);
+    }
+
+    // time-contains
+    if (!this->_options.is_null("time-contains")) {
+      SelectCondition* c = new SelectConditionTimeContains();
+      c->set(this->_options);
+      this->_select_conditions.push_back(c);
     }
 
   }
@@ -214,8 +251,11 @@ namespace geonlp
     this->_cumulative_points = 0;
     this->_topic_coords.clear();
     this->_topic_radius = -1.0;
-    this->_spatial_condition.set(picojson::value());
-    this->_temporal_condition.set(picojson::value());
+    for (std::vector<SelectCondition*>::iterator it = this->_select_conditions.begin();
+	 it != this->_select_conditions.end(); it++) {
+      delete (*it);
+    }
+    this->_select_conditions.clear();
   }
 
   // Geoword を一つコンテキスト関係に登録する
@@ -588,15 +628,17 @@ namespace geonlp
 	for (int i = 0; i < weights.size(); i++) {
 	  Geoword* pGeoword = (Geoword*)&(varray[i]);
 	  if (!pGeoword->isValid()) throw ContextException(pGeoword->toJson());
-	  double rt = this->_temporal_condition.judge(pGeoword);
-	  if (rt < 0) {
-	    weights[i] = -1.0;
-	  } else {
-	    double rs = this->_spatial_condition.judge(pGeoword);
-	    if (rs < 0) {
+	  // 登録されている全検索条件を用いて判定
+	  for (std::vector<SelectCondition*>::iterator it_condition = this->_select_conditions.begin();
+	       it_condition != this->_select_conditions.end();
+	       it_condition++) {
+	    if (weights[i] < 0.0) break; // 既に検索対象外なら以降の判定はスキップ
+	    SelectCondition* condition = (*it_condition);
+	    double result = condition->judge(pGeoword);
+	    if (result < 0.0) {
 	      weights[i] = -1.0;
 	    } else {
-	      weights[i] *= rs * rt;
+	      weights[i] *= result;
 	    }
 	  }
 	}

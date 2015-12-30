@@ -16,8 +16,7 @@
 #include "picojsonExt.h"
 #include "Geoword.h"
 #include "Address.h"
-#include "SpatialCondition.h"
-#include "TemporalCondition.h"
+#include "SelectCondition.h"
 
 namespace geonlp
 {
@@ -106,11 +105,8 @@ namespace geonlp
     std::vector<double> _topic_coords;
     double _topic_radius;
 
-    // 空間的条件
-    SpatialCondition _spatial_condition;
-
-    // 時間的条件
-    TemporalCondition _temporal_condition;
+    // 検索条件
+    std::vector<SelectCondition*> _select_conditions;
 
     picojson::array _nodes;          // parseNode の結果、全地名語候補を含む
     picojson::ext _options;          // parse オプション
@@ -164,6 +160,11 @@ namespace geonlp
     Context() {
       this->clear();
       this->_options.initByJson("{}");
+    }
+
+    // デストラクタ
+    ~Context() {
+      this->clear();
     }
 
     // parse オプションセット

@@ -43,7 +43,7 @@ namespace geonlp
     boost::shared_ptr<Profile> _profilesp;
     picojson::ext _options;
     Context _context;
-    Classifier _classifier;
+    //    Classifier _classifier;
 
   protected:
     /// @brief オプションをセットする
@@ -101,7 +101,8 @@ namespace geonlp
   public:
     // コンストラクタ
     Service(MAPtr maptr, boost::shared_ptr<Profile> profilesp)
-      :_classifier(profilesp->get_log_dir() + "classify.log") { 
+      //      :_classifier(profilesp->get_log_dir() + "classify.log") { 
+    {
       this->_ma_ptr = maptr;
       this->_context.clear();
       this->_profilesp = profilesp;

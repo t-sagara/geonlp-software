@@ -28,9 +28,9 @@ $request = array("method"=>"parse", "params"=>array($msg, array("geocoding"=>fal
 $response = $gs->proc(json_encode($request));
 printf("%s\n", $response);
 
-echo "---------- parse() (remove-class:.*Station.*) -----------------\n";
+echo "---------- parse() (remove-class:鉄道施設/*駅) -----------------\n";
 $msg = '国立情報学研究所は神保町駅から徒歩３分、千代田区一ツ橋２－１－１にあります。';
-$request = array("method"=>"parse", "params"=>array($msg, array("remove-class"=>array(".*Station.*"))), "id"=>1);
+$request = array("method"=>"parse", "params"=>array($msg, array("remove-class"=>array("鉄道施設/.*"))), "id"=>1);
 $response = $gs->proc(json_encode($request));
 printf("%s\n", $response);
 
@@ -46,9 +46,9 @@ $request = array("method"=>"parse", "params"=>array($msg, array("set-dic"=>array
 $response = $gs->proc(json_encode($request));
 printf("%s\n", $response);
 
-echo "---------- parse() (set-class:[\".*Station.*\"]) -----------------\n";
+echo "---------- parse() (set-class:[\"鉄道施設/.*駅\"]) -----------------\n";
 $msg = '国立情報学研究所は神保町駅から徒歩３分、千代田区一ツ橋２－１－１にあります。';
-$request = array("method"=>"parse", "params"=>array($msg, array("set-class"=>array(".*Station.*"))), "id"=>1);
+$request = array("method"=>"parse", "params"=>array($msg, array("set-class"=>array("鉄道施設/.*駅"))), "id"=>1);
 $response = $gs->proc(json_encode($request));
 printf("%s\n", $response);
 

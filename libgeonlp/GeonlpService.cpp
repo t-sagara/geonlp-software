@@ -171,6 +171,7 @@ namespace geonlp
       } catch (picojson::PicojsonException& e) {
 	throw ServiceRequestFormatException("Option \"geocoding\" must be a string value.");
       }
+      op.erase("geocoding");
     }
     
     if (op.has_key("adjunct")) {
@@ -179,6 +180,7 @@ namespace geonlp
       } catch (picojson::PicojsonException& e) {
 	throw ServiceRequestFormatException("Option \"adjunct\" must be a boolean value.");
       }
+      op.erase("adjunct");
     }
     
     if (op.has_key("threshold")) {
@@ -187,6 +189,7 @@ namespace geonlp
       } catch (picojson::PicojsonException& e) {
 	throw ServiceRequestFormatException("Option \"threshold\" must be an int value.");
       }
+      op.erase("threshold");
     }
 
     if (op.has_key("show-score")) {
@@ -195,6 +198,7 @@ namespace geonlp
       } catch (picojson::PicojsonException& e) {
 	throw ServiceRequestFormatException("Option \"show-score\" must be a boolean value.");
       }
+      op.erase("show-score");
     }
 
     if (op.has_key("show-candidate")) {
@@ -203,6 +207,7 @@ namespace geonlp
       } catch (picojson::PicojsonException& e) {
 	throw ServiceRequestFormatException("Option \"show-candidate\" must be a boolean value.");
       }
+      op.erase("show-candidate");
     }
 
     if (op.has_key("set-dic")) {
@@ -212,6 +217,7 @@ namespace geonlp
       } catch (picojson::PicojsonException& e) {
 	throw ServiceRequestFormatException("Option \"set-dic\" must be an array of int value.");
       }
+      op.erase("set-dic");
     }
 
     if (op.has_key("add-dic")) {
@@ -221,6 +227,7 @@ namespace geonlp
       } catch (picojson::PicojsonException& e) {
 	throw ServiceRequestFormatException("Option \"add-dic\" must be an array of int value.");
       }
+      op.erase("add-dic");
     }
 
     if (op.has_key("remove-dic")) {
@@ -230,6 +237,7 @@ namespace geonlp
       } catch (picojson::PicojsonException& e) {
 	throw ServiceRequestFormatException("Option \"remove-dic\" must be an array of int value.");
       }
+      op.erase("remove-dic");
     }
 
     if (op.has_key("set-class")) {
@@ -239,6 +247,7 @@ namespace geonlp
       } catch (picojson::PicojsonException& e) {
 	throw ServiceRequestFormatException("Option \"set-class\" must be an array of string value.");
       }
+      op.erase("set-class");
     }
 
     if (op.has_key("add-class")) {
@@ -263,6 +272,7 @@ namespace geonlp
       } catch (picojson::PicojsonException& e) {
 	throw ServiceRequestFormatException("Option \"add-class\" must be an array of string value.");
       }
+      op.erase("add-class");
     }
 
     if (op.has_key("remove-class")) {
@@ -287,6 +297,7 @@ namespace geonlp
       } catch (picojson::PicojsonException& e) {
 	throw ServiceRequestFormatException("Option \"remove-class\" must be an array of string value.");
       }
+      op.erase("remove-class");
     }
 
     // Version 1.1.0 の機能 
@@ -296,6 +307,7 @@ namespace geonlp
       } catch (picojson::PicojsonException& e) {
 	throw ServiceRequestFormatException("Option \"topic-point\" must be a list of double values.");
       }
+      op.erase("topic-point");
     }
 
     if (op.has_key("topic-radius")) {
@@ -304,6 +316,7 @@ namespace geonlp
       } catch (picojson::PicojsonException& e) {
 	throw ServiceRequestFormatException("Option \"topic-radius\" must be a double value.");
       }
+      op.erase("topic-radius");
     }
 
     if (!op.is_null("dist-server")) {
@@ -362,17 +375,48 @@ namespace geonlp
 	o.set_value("option", e.get_value("option"));
       }
       this->_options.set_value("dist-server", o);
+
+      op.erase("dist-server");
     }
 
     // Version 1.1.1 の機能
-#ifdef HAVE_LIBGDAL
-    if (op.has_key("spatial-condition")) {
-      this->_options.set_value("spatial-condition", op.get_value("spatial-condition"));
+    if (op.has_key("geo-contains")) {
+      this->_options.set_value("geo-contains", op.get_value("geo-contains"));
+      op.erase("geo-contains");
     }
-#endif /* HAVE_LIBGDAL */
-    
-    if (op.has_key("temporal-condition")) {
-      this->_options.set_value("temporal-condition", op.get_value("temporal-condition"));
+    if (op.has_key("geo-disjoint")) {
+      this->_options.set_value("geo-disjoint", op.get_value("geo-disjoint"));
+      op.erase("geo-disjoint");
+    }
+    if (op.has_key("time-exists")) {
+      this->_options.set_value("time-exists", op.get_value("time-exists"));
+      op.erase("time-exists");
+    }
+    if (op.has_key("time-before")) {
+      this->_options.set_value("time-before", op.get_value("time-before"));
+      op.erase("time-before");
+    }
+    if (op.has_key("time-after")) {
+      this->_options.set_value("time-after", op.get_value("time-after"));
+      op.erase("time-after");
+    }
+    if (op.has_key("time-overlaps")) {
+      this->_options.set_value("time-overlaps", op.get_value("time-overlaps"));
+      op.erase("time-overlaps");
+    }
+    if (op.has_key("time-contains")) {
+      this->_options.set_value("time-contains", op.get_value("time-contains"));
+      op.erase("time-contains");
+    }
+
+    // 未処理のオプションがあればエラー
+    if (op.get_keys().size() > 0) {
+      std::string errmsg = "Unknown option -> ";
+      std::vector<std::string> keys = op.get_keys();
+      for (std::vector<std::string>::iterator it = keys.begin(); it != keys.end(); it++) {
+	errmsg += (*it) + " ";
+      }
+      throw ServiceRequestFormatException(errmsg);
     }
 
     // コンテキストにもオプションをセット
@@ -482,7 +526,7 @@ namespace geonlp
 
       // 上記以外の、他品詞と区別がつかない場合のチェック
       if (node.get_conjugatedForm().length() > 1) {
-	probability = this->_classifier.check(nodes, (std::vector<Node>::const_iterator)it);
+	// probability = this->_classifier.check(nodes, (std::vector<Node>::const_iterator)it);
       }
 
       // 一般名詞に続く語は地名ではない
