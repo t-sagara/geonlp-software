@@ -27,7 +27,7 @@ namespace picojson
 
   void ext::_set_null(const std::string& key) {
     this->_v.get<picojson::object>().erase(key);
-    this->_v.get<picojson::object>().insert(std::make_pair(key, picojson::value::value()));
+    this->_v.get<picojson::object>().insert(std::make_pair(key, picojson::value()));
   }
   
   void ext::_set_bool(const std::string& key, bool b) {

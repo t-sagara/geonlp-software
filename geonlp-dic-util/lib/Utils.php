@@ -10,6 +10,9 @@ namespace GeoNLP;
  * @param $options    出力オプション（未使用）
  */
 function write_message($message, $options = array()) {
+  if (isset($options['status'])) {
+    echo '['.$options['status'].'] ';
+  }
   echo $message;
   @\ob_flush();
   \flush();

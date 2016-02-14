@@ -1,8 +1,8 @@
 Quick Install:
 
-(1) execute './configure; make' to compile this program.
+(1) Execute './configure; make' to compile this program.
 
-(2) sudo and execute 'make install' to install executable
+(2) Do sudo and execute 'make install' to install executable
   binaries and resources files.
 
 If some depended libraries are installed in custom directories,
@@ -15,9 +15,19 @@ $ export LD_LIBRARY_PATH=/usr/local/lib/boost_1.44:/usr/local/lib
 $ ./configure
 ...
 
-(3) move down to './geonlp-dic-util' directory and run
-% php geonlp-dic-util.php
-to download GeoNLP dictionaries.
+(3) Set GEONLP_DIR environmental variable to the directory where
+GEONLP dictionaries will be installed.
+
+$ export GEONLP_DIR=/home/foo/geonlp_dic
+
+(4) Move down to './geonlp-dic-util' directory and run;
+$ php geonlp-dic-util.php list
+to show all the available GeoNLP dictionaries on the server.
+
+(5) Execute 'add', 'compile' and 'install' command.
+$ php geonlp-dic-util.php add geonlp/japan_pref geonlp/japan_city ...
+$ php geonlp-dic-util.php compile
+$ php geonlp-dic-util.php install
 
 
 Generate and update the configure scripts:

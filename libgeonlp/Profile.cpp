@@ -32,8 +32,20 @@ namespace geonlp {
     else 
       filename = basename;
 
+    // 環境変数をチェック
+    char* p = std::getenv("GEONLP_DIR");
+    if (p) {
+      rcfilepath = std::string(p);
+      if (rcfilepath[rcfilepath.length() - 1] == '/') {
+	rcfilepath = rcfilepath.substr(0, rcfilepath.length() - 1);
+      }
+      rcfilepath = rcfilepath + "/" + filename;
+    }
+
     std::string fname = filename;
-    if (is_file_exists(fname)) {
+    if (is_file_exists(rcfilepath)) {
+      ; // 環境変数で指定したファイルがあったので利用する
+    } else if (is_file_exists(fname)) {
       rcfilepath = fname;
     } else {
       fname = std::string(PROFILE_DEFAULT_DIR_PATH) + "/" +  filename;

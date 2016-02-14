@@ -27,6 +27,48 @@ namespace geonlp
     return va;
   }
 
+  // GeoNLP parse データを
+  // GeoJSON の FeatureCollection に変換する
+  static picojson::value convertToGeoJSON(const picojson::value& r) {
+    if (!r.is<picojson::array>()) return r;
+    
+    picojson::array r_array = r.get<picojson::array>();
+    picojson::array features;
+    for (picojson::array::const_iterator it = r_array.begin(); it != r_array.end(); it++) {
+      picojson::value v = (*it);
+      if (!v.is<picojson::object>()) {
+	features.push_back(v);
+	continue;
+      }
+      // surface -> properties.surface
+      picojson::value surface = v.get("surface");
+      picojson::object properties;
+      
+      picojson::value geo = v.get("geo");
+      if (geo.is<picojson::null>()) {
+	// non-geo object
+	properties.insert(std::make_pair("surface", surface));
+	picojson::object o;
+	o.insert(std::make_pair("geometry", geo));
+	o.insert(std::make_pair("properties", properties));
+	geo = picojson::value(o);
+      } else {
+	// geo-object
+	properties = geo.get("properties").get<picojson::object>();
+	properties.insert(std::make_pair("surface", surface));
+	geo.get<picojson::object>().insert(std::make_pair("properties", properties));
+      }
+      geo.get<picojson::object>().insert(std::make_pair("type", std::string("Feature")));
+      features.push_back(geo);
+    }
+    // Pack into one feature collection
+    picojson::object result;
+    result.insert(std::make_pair("type", std::string("FeatureCollection")));
+    result.insert(std::make_pair("features", features));
+    
+    return picojson::value(result);
+  }
+
   // サービスを作成する
   // ジオコーダも初期化する
   ServicePtr createService(const std::string& profile) throw (ServiceCreateFailedException)
@@ -110,8 +152,10 @@ namespace geonlp
       picojson::value result;
       if (method == "version") {
 	result = this->version(params);
+	result = convertToGeoJSON(result);
       } else if (method == "parse") {
 	result = this->parse(params);
+	result = convertToGeoJSON(result);
       } else if (method == "parseStructured") {
 	result = this->parseStructured(params);
       } else if (method == "search") {

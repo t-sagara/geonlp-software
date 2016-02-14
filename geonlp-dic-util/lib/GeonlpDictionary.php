@@ -133,17 +133,30 @@ class GeoNLPDictionary
   //   'creator'   作成者名，部分一致
   //   'subject'   収録固有名クラス，正規表現
   public function isMatchConditions($options) {
+    $option_creator = null;
     if (array_key_exists('creator', $options)) {
-      $pattern = '/'.$options['creator'].'/i';
+      $option_creator = $options['creator'];
+    } else {
+      $option_creator = \getenv('GEONLP_CREATOR');
+    }
+    if ($option_creator) {
+      $pattern = '/'.$option_creator.'/i';
       if (!preg_match($pattern, $this->properties['creator'])
 	  && !preg_match($pattern, $this->getIdString())) {
 	return false;
       }
     }
+    $option_subject = null;
     if (array_key_exists('subject', $options)) {
+      $option_subject = $options['subject'];
+    } else {
+      $option_subject = \getenv('GEONLP_SUBJECT');
+    }
+    if ($option_subject) {
       $ismatch = false;
       foreach ($this->properties['subject'] as $subject) {
-	if (preg_match($options['subject'], $subject)) {
+	$pattern = '/'.$option_subject.'/i';
+	if (preg_match($pattern, $subject)) {
 	  $ismatch = true;
 	  break;
 	}
@@ -180,9 +193,10 @@ class GeoNLPDictionary
    */
   static public function getDictionariesFromRepository($uri = NULL) {
     if (is_null($uri)) $uri = $GLOBALS['geonlp_server'];
+    write_message(sprintf("ローカルキャッシュファイル '%s' から辞書一覧を取得しています．\n", $uri));
     $response = @file_get_contents($uri);
-    if (!$response) {
-      write_message("GeoNLP サーバから辞書一覧を取得できませんでした．\n", array("status"=>"warning"));
+    if ($response === FALSE) {
+      write_message("辞書一覧を取得できませんでした．\n", array("status"=>"error"));
       return array();
     }
     $r = json_decode($response, true);

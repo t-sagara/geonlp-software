@@ -21,18 +21,26 @@ function get_arguments() {
     }
   }
   // GeoNLP サーバの設定
+  $server = null;
   if (array_key_exists('server', $options)) {
-    if (substr($options['server'], strlen($options['server']) -1, 1) == '/') {
-      $options['server'] = substr($options['server'], 0, strlen($options['server']) - 1);
+    $server = $options['server'];
+  } else {
+    $server = \getenv('GEONLP_SERVER');
+  }
+  if ($server) {
+    if (substr($server, strlen($server) -1, 1) == '/') {
+      $server = substr($server, 0, strlen($server) - 1);
     }
-    write_message(sprintf("サーバを '%s' に変更しました．\n", $options['server']));
-    $GLOBALS['geonlp_server'] = $options['server'];
+    $GLOBALS['geonlp_server'] = $server;
+    write_message(sprintf("アクセスする GeoNLP サーバを '%s' に変更しました．\n", $server));
   }
   return array('options'=>$options, 'params'=>$params);
 }
 
 function usage() {
+  $default_data_dir = LocalRepository::get_default_data_dir();
   $msg =<<< _USAGE_
+
 使い方： php geonlp-dic-util [オプション] コマンド <パラメータ>
 
 説明：
@@ -77,22 +85,36 @@ function usage() {
 
   --dir=<ディレクトリ>
           ローカルリポジトリの場所を指定します．
-          デフォルトは $(HOME)/.geonlp-dic-util/ です．
+          デフォルトは {$default_data_dir} です．
+
+          環境変数 GEONLP_DIR で指定することもできます．
 
   --creator=<データ作成者ニックネーム>
           指定したデータ作成者による辞書のみを対象とします．
+          デフォルトは未指定で，全ての作成者による辞書が
+          対象となります．
+
           list, sync で機能します．
 
-  --subject=<固有名クラス正規表現>
-          指定した正規表現に一致する固有名クラスを含む
-          辞書のみを対象とします．
+          環境変数 GEONLP_CREATOR で指定することもできます．
+
+  --subject=<固有名クラス>
+          指定したる固有名クラスを含む辞書のみを対象とします．
+          デフォルトは未指定で，全ての辞書が対象となります．
+        
           list, sync で機能します．
 
   --server=<GeoNLP公開サーバの URL プレフィックス>
-          デフォルト: https://geonlp.ex.nii.ac.jp/api/dictionary
+          地名辞書をダウンロードするための公開サーバの URL を
+          指定します。デフォルトは以下の URL です。
+
+          https://geonlp.ex.nii.ac.jp/api/dictionary
+ 
           外部ネットワークに接続するためにプロキシサーバを
           利用する必要がある場合などは，上記 URL に該当する
           URL プレフィックスを指定してください．
+
+          環境変数 GEONLP_SERVER で指定することもできます．
 
 _USAGE_;
   write_message($msg);
@@ -125,11 +147,7 @@ function main() {
  **/
 function geonlp_util_list($args) {
   $local = new LocalRepository($args);
-  if (count($args['params']) == 1) {
-    $dics = $local->getDictionaries();
-  } else {
-    write_message("パラメータは無視されます．\n", array("status"=>"warning"));
-  }
+  $dics = $local->getDictionaries();
   foreach ($dics as $id => $dic) {
     if (!$dic->isMatchConditions($args['options'])) {
       continue;

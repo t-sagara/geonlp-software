@@ -21,26 +21,63 @@ class LocalRepository
     }
   }
 
+  // GeoNLP のデフォルト data_dir を取得する
+  static public function get_default_data_dir() {
+    $output = array();
+    @\exec("geonlp_ma_makedic -h", $output);
+    $usage = implode("\n", $output);
+    // 旧バージョン対応
+    // sqlite3_file  = /usr/local/lib/geonlp/geodic.sq3
+    if (preg_match('/sqlite3_file\s*=\s*(.*)\/geodic.sq3/', $usage, $m)) {
+      return $m[1];
+    }
+    write_message("GeoNLP のデフォルト辞書ディレクトリが取得できません．\nGeoNLP がインストールされていて， geonlp_ma_makedic コマンドが\n実行可能であることを確認してください．", array("status"=>"error"));
+    die();
+  }
+
+  // GeoNLP のデフォルト conf_dir を取得する
+  static public function get_default_conf_dir() {
+    $output = array();
+    @\exec("geonlp_ma_makedic -h", $output);
+    $usage = implode("\n", $output);
+    if (preg_match('/geonlp_rc\s*=\s*(.*)\/geonlp.rc/', $usage, $m)) {
+      return $m[1];
+    }
+    write_message("GeoNLP のデフォルト設定ディレクトリが取得できません．\nGeoNLP がインストールされていて， geonlp_ma_makedic コマンドが\n実行可能であることを確認してください．", array("status"=>"error"));
+    die();
+  }
+
   // リポジトリを置くディレクトリをセットする
   private function set_wd($dir) {
-    if (!$dir) {
-      $dir = \getenv('HOME');
+    if ($dir) {
+      ; // コマンドラインオプション --dir で指定された値を使う
+    } else {
+      $dir = \getenv('GEONLP_DIR'); // 環境変数から取得する
       if (!$dir) {
-	throw new RuntimeException("Please set environmet variable 'HOME'.");
+	// 環境変数も未設定の場合, GeoNLP インストール時のデフォルト値
+	$dir = self::get_default_data_dir();
       }
     }
-    if (substr($dir, -1) != '/') $dir .= '/';
-    $wd = $dir.'.geonlp-dic-util';
+    if (substr($dir, -1) == '/') {
+      $dir = substr($dir, 0, strlen($dir) -1);
+    }
+    $wd = $dir.'/.geonlp-dic-util';
     if (\file_exists($wd)) {
       if (!\is_dir($wd) || !\is_writable($wd)) {
-	throw new RuntimeException(sprintf("ローカルリポジトリ用ディレクトリ（'%s'）が存在しますが，ディレクトリではないか、書き込みが許可されていません．", $wd));
+	throw new RuntimeException(sprintf("ローカルリポジトリ用ディレクトリ（'%s'）が存在しますが，ディレクトリではないか、書き込みが許可されていません．\n", $wd));
       }
     } else {
-      \mkdir($wd, 0755);
+      write_message(sprintf("ローカルリポジトリを %s に作成します．\n", $wd));
+      if (! @\mkdir($wd, 0755, true)) {
+	write_message(sprintf("ディレクトリの作成に失敗しました．書き込みが許可されているか確認してください．\n"), array("status"=>"error"));
+	write_message(sprintf("オプション --dir ，環境変数 GEONLP_DIR で別のディレクトリを指定することもできます．\n"), array("status"=>"hint"));
+	die();
+      }
       \mkdir($wd.'/zip', 0755);
       \mkdir($wd.'/extracted', 0755);
     }
-    $this->wd = $wd;
+    $this->geonlp_dir = $dir; // バイナリ辞書をインストールするディレクトリ
+    $this->wd = $wd; // 作業用ディレクトリ
   }
 
   // データベースをセットする
@@ -244,8 +281,13 @@ class LocalRepository
     $dictionary_list = $this->wd.'/dictionary_list.json';
     if (!file_exists($dictionary_list)
 	|| time() - filemtime($dictionary_list) > 3600) {
+      write_message(sprintf("GeoNLP サーバ '%s' から最新の辞書一覧を取得しています．\n", $GLOBALS['geonlp_server']));
       $response = @file_get_contents($GLOBALS['geonlp_server']);
-      file_put_contents($dictionary_list, $response);
+      if ($response !== FALSE) {
+        file_put_contents($dictionary_list, $response);
+      } else {
+        write_message("サーバから辞書一覧を取得できませんでした．\n", array("status"=>"warning"));
+      }
     }
     $dicts = GeoNLPDictionary::getDictionariesFromRepository($dictionary_list);
 
@@ -267,13 +309,32 @@ class LocalRepository
 
   // バイナリ地名辞書をコンパイルする
   public function compile($dics) {
+    if (count($dics) == 0) {
+      write_message("辞書が1つも登録されていません．\n", array("status"=>"error"));
+      write_message("先に add コマンドで辞書を登録してください．\n", array("status"=>"hint"));
+      return;
+    }
     $geodic = $this->wd.'/geodic.sq3';
-    $rc     = $this->wd.'/geonlp_local.rc';
+    $rc     = $this->wd.'/geonlp.rc';
     $ma_rc  = $this->wd.'/geonlp_ma_makedic.rc';
     $init_gz = dirname(__FILE__).'/../resource/geodic-init.dump.gz';
+    $mecab_libexec_dir = exec("mecab-config --libexecdir", $output, $retval);   // mecab-dict-index の場所を特定
+    if ($retval != 0) {
+      write_message("mecab-config が見つからないため、処理を中止します。", array("status"=>"error"));
+      die();
+    }
     // 初期設定ファイルを配置
-    copy(dirname(__FILE__).'/../resource/geonlp_local.rc', $rc);
-    copy(dirname(__FILE__).'/../resource/geonlp_ma_makedic.rc', $ma_rc);
+    $data_dir = self::get_default_data_dir();
+    $conf_dir = self::get_default_conf_dir();
+    $pattern = sprintf("!%s!u", preg_quote($data_dir));
+    // geonlp.rc
+    $geonlp_rc = file_get_contents($conf_dir.'/geonlp.rc');
+    $geonlp_rc = preg_replace($pattern, $this->wd, $geonlp_rc);
+    file_put_contents($rc, $geonlp_rc);
+    // geonlp_ma_makedic.rc
+    $geonlp_ma_makedic = file_get_contents($conf_dir.'/geonlp_ma_makedic.rc');
+    $geonlp_ma_makedic = preg_replace($pattern, $this->wd, $geonlp_ma_makedic);
+    file_put_contents($ma_rc, $geonlp_ma_makedic);
     @unlink($geodic);
     $cmd = sprintf("gzip -dc %s | sqlite3 %s", $init_gz, $geodic);
     write_message(`$cmd`);
@@ -320,45 +381,49 @@ class LocalRepository
 
   // バイナリ地名辞書をインストールする
   public function install_binary() {
-    // インストール元と先のパスを取得
+    // インストール先は data_dir
+    // インストールするファイル一覧を取得
     $usage = `geonlp_ma_makedic -h`;
-    $flag = 0;
     $paths = array();
+    $pattern = '!(.*)\s*=\s*.*/(.*\..+)!';
     foreach (explode("\n", $usage) as $line) {
-      if ($flag == 0) {
-	if ($line == 'Default files:') {
-	  $flag = 1;
-	} else {
-	  continue;
-	}
-      } else {
-	$args = explode("=", $line);
-	if (count($args) < 2) continue;
-	$filename = trim($args[0]);
-	$filepath = trim($args[1]);
-	$paths[$filename] = $filepath;
+      if (preg_match($pattern, $line, $m)) {
+	$paths[$m[1]] = $m[2];
       }
     }
     write_message("以下のファイルをインストールします．\n");
     $total_error = array("unreadable"=>0, "unwritable"=>0);
-    foreach ($paths as $filename => $default_filepath) {
-      $filepath = $this->wd.'/'.basename($default_filepath);
-      if (!is_readable($filepath)) {
-	write_message(sprintf("インストールするファイル %s が存在しません\n", $filepath), array("status"=>"error"));
+    foreach ($paths as $title => $filename) {
+      $srcfile = $this->wd.'/'.$filename;
+      $destfile = $this->geonlp_dir.'/'.$filename;
+      if (!is_readable($srcfile)) {
+	write_message(sprintf("インストールするファイル %s が存在しません．\n", $srcfile), array("status"=>"error"));
 	$total_error['unreadable']++;
       } else {
-	write_message(sprintf("%s 作成 => %s\n", @strftime("%Y-%m-%d %H:%M:%S", filemtime($filepath)), $filepath));
+	$srctime = @strftime("%Y-%m-%d %H:%M:%S", filemtime($srcfile));
+	if (file_exists($destfile)) {
+	  $desttime = @strftime("%Y-%m-%d %H:%M:%S", filemtime($destfile));
+	} else {
+	  $desttime = '新しいファイル';
+	}
+	write_message(sprintf("%s(%s)\n-> %s(%s)\n", $srcfile, $srctime, $destfile, $desttime), array("status"=>"info"));
       }
-      if (!is_writable($default_filepath)) {
-	write_message(sprintf("! インストール先ファイル %s は書き込み不可です\n", $default_filepath), array("status"=>"error"));
+      if (!file_exists($destfile)) {
+	if (!is_writable(dirname($destfile))) {
+	  write_message(sprintf("インストール先ディレクトリ %s は書き込み不可です\n", dirname($destfile)), array("status"=>"error"));
+	  $total_error['unwritable']++;
+	}
+      }
+      if (file_exists($destfile) && !is_writable($destfile)) {
+	write_message(sprintf("インストール先ファイル %s は書き込み不可です\n", $destfile), array("status"=>"error"));
 	$total_error['unwritable']++;
       }
     }
     if ($total_error['unreadable'] > 0) {
-      write_message("! 先に compile を実行し，バイナリ地名辞書を作成してください．\n", array("status"=>"error"));
+      write_message("先に compile を実行し，バイナリ地名辞書を作成してください．\n", array("status"=>"hint"));
     }
     if ($total_error['unwritable'] > 0) {
-      write_message("! インストール先ファイルを書き込み許可にするか，書き込み権限のあるユーザで実行してください．\n", array("status"=>"error"));
+      write_message("インストール先ファイルを書き込み許可にするか，書き込み権限のあるユーザで実行してください．\n", array("status"=>"error"));
     }
     if ($total_error['unreadable'] > 0 || $total_error['unwritable'] > 0) return;
     
@@ -367,9 +432,21 @@ class LocalRepository
     if (strtolower($in) != 'y') return;
     
     // コピー手順を出力
-    foreach ($paths as $filename => $default_filepath) {
-      $filepath = $this->wd.'/'.basename($default_filepath);
-      copy($filepath, $default_filepath);
+    foreach ($paths as $title => $filename) {
+      $srcfile = $this->wd.'/'.$filename;
+      $destfile = $this->geonlp_dir.'/'.$filename;
+      \copy($srcfile, $destfile);
+    }
+
+    // プロファイルファイル
+    $profile_path = $this->geonlp_dir.'/geonlp.rc';
+    if (!file_exists($profile_path)) {
+      $data_dir = self::get_default_data_dir();
+      $pattern = sprintf("!%s!u", preg_quote($data_dir));
+      $rc = get_file_contents(self::get_default_conf_dir().'/geonlp.rc');
+      $new_rc = preg_replace($pattern, $this->geonlp_dir, $rc);
+      file_put_contents($profile_path, $new_rc);
+      write_message(sprintf("プロファイル '%s' を作成しました．\n", $profile_path));
     }
     write_message("完了しました．\n");
   }

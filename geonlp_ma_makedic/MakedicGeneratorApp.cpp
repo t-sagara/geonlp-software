@@ -21,9 +21,11 @@ void MakedicGeneratorApp::usage(const char* progname) {
   std::string profile_path = geonlp::Profile::searchProfile();
   geonlp::Profile profile;
   profile.load(profile_path);
+  std::cout << "Profile file:\n";
+  std::cout << "  geonlp_rc     = " << profile_path << std::endl;
   std::cout << "Default files:\n";
-  std::cout << "  sqlite3_file = " << profile.get_sqlite3_file() << std::endl;
-  std::cout << "  darts_file   = " << profile.get_darts_file() << std::endl;
+  std::cout << "  sqlite3_file  = " << profile.get_sqlite3_file() << std::endl;
+  std::cout << "  darts_file    = " << profile.get_darts_file() << std::endl;
   std::cout << "  wordlist_file = " << profile.get_wordlist_file() << std::endl;
   std::cout << "  mecab_userdic = " << profile.get_mecab_userdic() << std::endl;
   

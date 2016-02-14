@@ -26,11 +26,6 @@ int main (int argc, char * const argv[]) {
       exit(-1);
     }
   }
-  /*
-  if (rcfilename == "") rcfilename = geonlp::Profile::searchProfile();
-  else rcfilename = geonlp::Profile::searchProfile(rcfilename);
-  std::cerr << "use " << rcfilename << " as the resource file." << std::endl;
-  */
 
   try {
     if (rcfilename == "") {

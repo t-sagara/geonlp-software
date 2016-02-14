@@ -47,7 +47,7 @@ MakedicGeneratorAppArgument::MakedicGeneratorAppArgument(int argc, const char **
   }
 		
   try {
-    std::cerr << "プロファイルをロード中 : " << profile_path << std::endl;
+    // std::cerr << "プロファイルをロード中 : " << profile_path << std::endl;
     this->profile.load(profile_path);
   } catch (std::runtime_error& e) {
     throw InvalidArgumentException("プロファイルの読み込みに失敗しました。");
@@ -55,12 +55,12 @@ MakedicGeneratorAppArgument::MakedicGeneratorAppArgument(int argc, const char **
 	
   if (this->profile.get_data_dir().empty()) {
     throw InvalidArgumentException("プロファイルにデータディレクトリが定義されていません。");
-  } else {
+  }/* else {
     std::cout << "  sqlite3_file = " << this->profile.get_sqlite3_file() << std::endl;
     std::cout << "  darts_file   = " << this->profile.get_darts_file() << std::endl;
     std::cout << "  wordlist_file = " << this->profile.get_wordlist_file() << std::endl;
     std::cout << "  mecab_userdic = " << this->profile.get_mecab_userdic() << std::endl;
-  }
+    }*/
 }
 
 bool MakedicGeneratorAppArgument::hasOption(const std::string& key) const {
