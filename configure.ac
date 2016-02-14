@@ -12,6 +12,9 @@ AC_CONFIG_MACRO_DIR([m4])
 LIB_VERSION_INFO='1.1.1'
 AC_SUBST(LIB_VERSION_INFO)
 
+# basename of resource file
+AC_DEFINE([GEONLP_RESOURCE_FILENAME], ["geonlp.rc"], [Resource filename])
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC

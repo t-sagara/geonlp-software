@@ -24,13 +24,8 @@ namespace geonlp {
 
   // プロファイルのパスを探す
   std::string Profile::searchProfile(const std::string& basename) {
-    std::string filename;
+    std::string filename(GEONLP_RESOURCE_FILENAME);
     std::string rcfilepath = "";
-    std::string ext(PROFILE_FILE_EXT);
-    if (basename.length() < ext.length() || basename.substr(basename.length() - ext.length()) != ext)
-      filename = basename + ext;
-    else 
-      filename = basename;
 
     // 環境変数をチェック
     char* p = std::getenv("GEONLP_DIR");
