@@ -67,6 +67,9 @@ namespace geonlp
     void set_to(const std::string& ymd) throw (SelectConditionException) 
     { this->_to_ymd = SelectCondition::_get_ymd(ymd); }
 
+    // 実行環境によって利用不可能な条件が実行されたときの処理
+    void unsupported_action(const std::string& name) throw (SelectConditionException);
+
   public:
     // コンストラクタ
     SelectCondition();

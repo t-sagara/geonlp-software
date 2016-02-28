@@ -110,29 +110,34 @@ AC_SUBST(LIBDAMS_LIB)
 AC_SUBST(DAMS_INC_FLAGS)
 
 # GDAL installation settings
+LIBGDAL_LIB=""
 AC_ARG_WITH(
-   gdal-config,
-   [  --with-gdal-config=PATH  set gdal-config location [search path]],
-   AC_MSG_RESULT(using $with_gdal_config for gdal-config)
-   GDAL_CONFIG=$with_gdal_config,
-   [AC_PATH_PROGS(GDAL_CONFIG, gdal-config, no)]
+   [gdal],
+   [  --without-gdal disable spatial filters],
+   [with_gdal=$with_gdal],
+   [with_gdal=yes]
 )
 
-if test $GDAL_CONFIG = "no";
-then
-   AC_MSG_ERROR(gdal-config is not found in your system)
-fi
-AC_SUBST(GDAL_CONFIG)
-
-GDAL_INC_FLAGS="`$GDAL_CONFIG --cflags`"
-AC_SUBST(GDAL_INC_FLAGS)
-
-AC_HAVE_LIBRARY([gdal],
-  AC_DEFINE([HAVE_LIBGDAL], [1], [Define if you have libgdal])
-  LIBGDAL_LIB="`$GDAL_CONFIG --libs`",
-  AC_MSG_ERROR(*** GDAL library not found ***)
+AS_IF([test "x$with_gdal" == xyes],
+  [AC_ARG_WITH(
+     [gdal-config],
+     [  --with-gdal-config=PATH  set gdal-config location [search path]],
+     AC_MSG_RESULT(using $with_gdal_config for gdal-config)
+     GDAL_CONFIG=$with_gdal_config,
+     [AC_PATH_PROGS(GDAL_CONFIG, gdal-config, no)]
+   )
+   if test $GDAL_CONFIG = "no";
+   then
+     AC_MSG_ERROR(gdal-config is not found in your system (use "--without-gdal" option if you do not need spatial filters))
+   fi
+   AC_SUBST(GDAL_CONFIG)
+   GDAL_INC_FLAGS="`$GDAL_CONFIG --cflags`"
+   AC_SUBST(GDAL_INC_FLAGS)
+   AC_DEFINE([HAVE_LIBGDAL], [1], [Define if you have libgdal])
+   LIBGDAL_LIB="`$GDAL_CONFIG --libs`"
+   AC_SUBST(LIBGDAL_LIB)
+  ]
 )
-AC_SUBST(LIBGDAL_LIB)
 
 
 # misc libraries

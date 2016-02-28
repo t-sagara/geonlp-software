@@ -52,12 +52,13 @@ namespace geonlp
 
   // デストラクタ
   SelectCondition::~SelectCondition() {
-    this->clear_spatial_sources();
 #ifdef HAVE_LIBGDAL
+    this->clear_spatial_sources();
     OGRCleanupAll();
 #endif /* HAVE_LIBGDAL */
   }
 
+#ifdef HAVE_LIBGDAL
   // JSON オプションパラメータから空間データを構築
   void SelectCondition::set_spatial_sources(const picojson::value& op_v) {
     this->clear_spatial_sources();
@@ -86,7 +87,6 @@ namespace geonlp
 
   // 用意した空間データを削除
   void SelectCondition::clear_spatial_sources(void) {
-#ifdef HAVE_LIBGDAL
     if (this->_ogrDataSources.size() > 0) {
       // 読み込み済みのデータソースをクリアする
       for (std::vector<OGRDataSource*>::iterator it = this->_ogrDataSources.begin();
@@ -102,12 +102,10 @@ namespace geonlp
       }
       this->_tmpfiles.clear();
     }
-#endif /* HAVE_LIBGDAL */
   }
   
   // データソースを追加する
   int SelectCondition::add_spatial_data_source(const std::string& url) {
-#ifdef HAVE_LIBGDAL
     OGRSFDriver* poDriver;
     OGRDataSource* poDataSource;
     poDataSource = OGRSFDriverRegistrar::Open(url.c_str(), FALSE, &(poDriver));
@@ -118,7 +116,6 @@ namespace geonlp
     }
     // std::cerr << "Successfully read " << url << "." << std::endl;
     this->_ogrDataSources.push_back(poDataSource);
-#endif /* HAVE_LIBGDAL */
   }
 
   // GeoJSON を追加する
@@ -131,6 +128,20 @@ namespace geonlp
     ofs.close();
     this->_tmpfiles.push_back(tmp_filename);
     this->add_spatial_data_source(tmp_filename);
+  }
+#endif /* HAVE_LIBGDAL */
+
+  void SelectCondition::unsupported_action(const std::string& name) throw (SelectConditionException) 
+  {
+    // 環境変数をチェック
+    char* p = std::getenv("GEONLP_IGNORE_ERROR");
+    if (p && (!strncmp(p, "Y", 1) || !strncmp(p, "y", 1))) {
+      // 環境変数 GEONLP_IGNORE_ERROR が 'Y*' または 'y*' の場合
+      // 無視して先に進む
+      return;
+    }
+    // それ以外の場合はエラー終了
+    throw SelectConditionException(std::string("'") + name + "' is not supported. (Hint: Set environmetal variable GEONLP_IGNORE_ERROR' to 'YES' to ignore this exception)");
   }
 
   void SelectCondition::set(picojson::ext& options) {
@@ -150,6 +161,8 @@ namespace geonlp
     if (!options.has_key("geo-contains")) return;
     const picojson::value& op_v = options.get_value("geo-contains");
     this->set_spatial_sources(op_v);
+#else
+    this->unsupported_action("geo-contains");
 #endif /* HAVE_LIBGDAL */
   }
 
@@ -210,6 +223,8 @@ namespace geonlp
     if (options.is_null("geo-disjoint")) return;
     const picojson::value& op_v = options.get_value("geo-disjoint");
     this->set_spatial_sources(op_v);
+#else
+    this->unsupported_action("geo-disjoint");
 #endif /* HAVE_LIBGDAL */
   }
 
