@@ -89,12 +89,14 @@ void session(socket_ptr sock)
 	boost::asio::write(*sock, boost::asio::buffer(result.c_str(), result.length()));
       }
 
+      /*
       struct rusage r;
       if (getrusage(RUSAGE_SELF, &r) != 0) {
 	std::cerr << "getrusage failed." << std::endl;
       } else {
 	std::cerr << "maxrss=" << r.ru_maxrss << std::endl;
       }
+      */
 
     }
   }
