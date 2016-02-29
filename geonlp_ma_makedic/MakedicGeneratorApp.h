@@ -8,9 +8,11 @@
 
 #ifndef _MAKEDIC_GENERATOR_APP_H
 #define _MAKEDIC_GENERATOR_APP_H
+#include <string>
 
 //#define DEFAULT_INI_FILE_PATH "/usr/local/etc/MakedicGenerator.ini"
-#define DEFAULT_INI_FILE_PATH "/usr/local/etc/geonlp_ma_makedic.rc"
+//#define DEFAULT_INI_FILE_PATH "/usr/local/etc/geonlp_ma_makedic.rc"
+#define DEFAULT_INI_FILE "geonlp_ma_makedic.rc"
 
 class MakedicGeneratorApp {
 
@@ -18,6 +20,9 @@ private:
 
 	/// @brief 使い方を表示します。
 	void usage(const char* progname);
+
+	/// @brief 設定ファイルのパスを生成します。
+	static std::string default_rc(void) { return std::string(PROFILE_DEFAULT_DIR_PATH) + "/" + DEFAULT_INI_FILE; }
 
 public:
 

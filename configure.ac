@@ -81,7 +81,7 @@ AC_SUBST(MECAB_CONFIG)
 
 MECAB_DICT_INDEX="`$MECAB_CONFIG --libexecdir`/mecab-dict-index"
 AC_SUBST(MECAB_DICT_INDEX)
-
+AC_DEFINE_UNQUOTED(MECAB_DICT_INDEX, "$MECAB_DICT_INDEX", "mecab-dict-index")
 
 # DAMS installation settings
 AC_ARG_WITH(

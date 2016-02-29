@@ -1,12 +1,14 @@
-#include "MakedicGeneratorConfiguration.h"
 #include <boost/algorithm/string.hpp>
+#include "MakedicGeneratorConfiguration.h"
+#include "config.h"
 
 MakedicGeneratorConfiguration::MakedicGeneratorConfiguration(const std::string& ini_file_path) {
 	read_ini(ini_file_path, conf_ini_file);
 }
 
 std::string MakedicGeneratorConfiguration::get_mecab_dict_index_path() const {
-	return conf_ini_file.get<std::string>("mecab_dict_index_path");
+  return std::string(MECAB_DICT_INDEX);
+  //	return conf_ini_file.get<std::string>("mecab_dict_index_path");
 }
 
 /*

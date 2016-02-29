@@ -439,15 +439,26 @@ class LocalRepository
     }
 
     // プロファイルファイル
+    /*
     $profile_path = $this->geonlp_dir.'/geonlp.rc';
     if (!file_exists($profile_path)) {
       $data_dir = self::get_default_data_dir();
       $pattern = sprintf("!%s!u", preg_quote($data_dir));
-      $rc = get_file_contents(self::get_default_conf_dir().'/geonlp.rc');
+      $rc = file_get_contents(self::get_default_conf_dir().'/geonlp.rc');
       $new_rc = preg_replace($pattern, $this->geonlp_dir, $rc);
       file_put_contents($profile_path, $new_rc);
       write_message(sprintf("プロファイル '%s' を作成しました．\n", $profile_path));
     }
+    $profile_path = $this->geonlp_dir.'/geonlp_ma_makedic.rc';
+    if (!file_exists($profile_path)) {
+      $data_dir = self::get_default_data_dir();
+      $pattern = sprintf("!%s!u", preg_quote($data_dir));
+      $rc = file_get_contents(self::get_default_conf_dir().'/geonlp_ma_makedic.rc');
+      $new_rc = preg_replace($pattern, $this->geonlp_dir, $rc);
+      file_put_contents($profile_path, $new_rc);
+      write_message(sprintf("プロファイル '%s' を作成しました．\n", $profile_path));
+    }
+    */
     write_message("完了しました．\n");
   }
   

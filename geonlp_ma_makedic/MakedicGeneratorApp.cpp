@@ -23,6 +23,7 @@ void MakedicGeneratorApp::usage(const char* progname) {
   profile.load(profile_path);
   std::cout << "Profile file:\n";
   std::cout << "  geonlp_rc     = " << profile_path << std::endl;
+  std::cout << "  " << DEFAULT_INI_FILE << " = " << MakedicGeneratorApp::default_rc() << std::endl;
   std::cout << "Default files:\n";
   std::cout << "  sqlite3_file  = " << profile.get_sqlite3_file() << std::endl;
   std::cout << "  darts_file    = " << profile.get_darts_file() << std::endl;
@@ -48,7 +49,7 @@ int MakedicGeneratorApp::exec(int argc, const char **argv) {
     if (arg.hasOption("f")) {
       file = arg.getOptIniFilePath();
     } else {
-      file = DEFAULT_INI_FILE_PATH;
+      file = MakedicGeneratorApp::default_rc();
     }
     MakedicGeneratorConfiguration conf(file);
 
