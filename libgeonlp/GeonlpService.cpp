@@ -54,9 +54,11 @@ namespace geonlp
 	geo = picojson::value(o);
       } else {
 	// geo-object
-	properties = geo.get("properties").get<picojson::object>();
-	properties.insert(std::make_pair("surface", surface));
-	geo.get<picojson::object>().insert(std::make_pair("properties", properties));
+	picojson::object o = geo.get("properties").get<picojson::object>();
+	o.insert(std::make_pair("surface", surface));
+	geo.get<picojson::object>().erase("properties");
+	geo.get<picojson::object>().insert(std::make_pair("properties", o));
+	// geo.get<picojson::object>().insert(std::make_pair("properties", properties));
       }
       geo.get<picojson::object>().insert(std::make_pair("type", std::string("Feature")));
       features.push_back(geo);
