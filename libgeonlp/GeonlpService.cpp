@@ -152,10 +152,14 @@ namespace geonlp
       picojson::value result;
       if (method == "version") {
 	result = this->version(params);
-	result = convertToGeoJSON(result);
+	if (this->_options._get_bool("geojson")) {
+	  result = convertToGeoJSON(result);
+	}
       } else if (method == "parse") {
 	result = this->parse(params);
-	result = convertToGeoJSON(result);
+	if (this->_options._get_bool("geojson")) {
+	  result = convertToGeoJSON(result);
+	}
       } else if (method == "parseStructured") {
 	result = this->parseStructured(params);
       } else if (method == "search") {
@@ -453,6 +457,18 @@ namespace geonlp
       op.erase("time-contains");
     }
 
+    // version 1.2.0 の機能
+    // 出力フォーマットを geojson 準拠にする
+    if (op.has_key("geojson")) {
+      picojson::value v = op.get_value("geojson");
+      if (v.is<bool>()) {
+	this->_options.set_value("geojson", v.get<bool>());
+      } else {
+	throw ServiceRequestFormatException("Option \"geojson\" must be a boolean value.");
+      }
+      op.erase("geojson");
+    }
+    
     // 未処理のオプションがあればエラー
     if (op.get_keys().size() > 0) {
       std::string errmsg = "Unknown option -> ";
@@ -481,6 +497,7 @@ namespace geonlp
     this->_options.set_value("spatial-condition", picojson::null());
 #endif /* HAVE_LIBGDAL */
     this->_options.set_value("temporal-condition", picojson::null());
+    this->_options.set_value("geojson", false);
     this->_ma_ptr->resetActiveDictionaries();
     this->_ma_ptr->resetActiveClasses();
     this->_context.setOptions(this->_options);
