@@ -36,7 +36,7 @@ void get_post_message(std::string& message) {
   int len = atoi(getenv("CONTENT_LENGTH"));
   char buf[len + 1];
   std::cin.read(buf, len);
-  buf[len + 1] = '\0';
+  buf[len] = '\0';
   message = buf;
 }
 
