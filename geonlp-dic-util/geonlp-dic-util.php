@@ -5,6 +5,7 @@ require_once(dirname(__FILE__).'/lib/Utils.php');
 
 define('DEFAULT_GEONLP_SERVER', 'https://geonlp.ex.nii.ac.jp/api/dictionary');
 $geonlp_server = DEFAULT_GEONLP_SERVER;
+$geonlp_proxy_server = null;
 
 function get_arguments() {
   $options = array();
@@ -34,6 +35,18 @@ function get_arguments() {
     $GLOBALS['geonlp_server'] = $server;
     write_message(sprintf("アクセスする GeoNLP サーバを '%s' に変更しました．\n", $server));
   }
+  // GeoNLP プロキシサーバの設定
+  $proxy = null;
+  if (array_key_exists('proxy', $options)) {
+    $proxy = $options['proxy'];
+  } else {
+    $proxy = \getenv('GEONLP_PROXY_SERVER');
+  }
+  if ($proxy) {
+    $GLOBALS['geonlp_proxy_server'] = $proxy;
+    write_message(sprintf("プロキシサーバを '%s' に変更しました．\n", $proxy));
+  }
+
   return array('options'=>$options, 'params'=>$params);
 }
 
@@ -59,7 +72,7 @@ function usage() {
   sync    パラメータ不要
           GeoNLP公開サーバからダウンロード済みの辞書を
           最新の状態に更新します．
-  
+
   add     辞書データ名 [辞書データ名2 ...]
           指定した辞書をダウンロードして登録します．
 
@@ -101,7 +114,7 @@ function usage() {
   --subject=<固有名クラス>
           指定したる固有名クラスを含む辞書のみを対象とします．
           デフォルトは未指定で，全ての辞書が対象となります．
-        
+
           list, sync で機能します．
 
   --server=<GeoNLP公開サーバの URL プレフィックス>
@@ -109,12 +122,16 @@ function usage() {
           指定します。デフォルトは以下の URL です。
 
           https://geonlp.ex.nii.ac.jp/api/dictionary
- 
-          外部ネットワークに接続するためにプロキシサーバを
-          利用する必要がある場合などは，上記 URL に該当する
-          URL プレフィックスを指定してください．
 
           環境変数 GEONLP_SERVER で指定することもできます．
+
+  --proxy=<外部ネットワークへのProxyサーバのURL>
+          外部ネットワークに接続するためにプロキシサーバを
+          利用する必要がある場合は，その URL を指定します。
+          デフォルトは未設定でダイレクトに接続します。
+          認証が必要なプロキシサーバには対応しておりません。
+
+          環境変数 GEONLP_PROXY_SERVER で指定することもできます．
 
 _USAGE_;
   write_message($msg);

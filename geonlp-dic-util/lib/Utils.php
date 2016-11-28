@@ -17,3 +17,24 @@ function write_message($message, $options = array()) {
   @\ob_flush();
   \flush();
 }
+
+/**
+ * stream_context を作成する
+ * @param なし
+ * @return context オブジェクト
+ */
+function get_stream_context() {
+  // Proxy サーバ対応
+  if (isset($GLOBALS['geonlp_proxy_server']) && $GLOBALS['geonlp_proxy_server']) {
+    $proxy = $GLOBALS['geonlp_proxy_server'];
+    $options = array('http' => array(
+      'proxy' => $proxy,
+      'request_fulluri' => true,
+    ));
+  } else {
+    $options = array('http' => array(
+      'request_fulluri' => true,
+    ));
+  }
+  return stream_context_create($options);
+}

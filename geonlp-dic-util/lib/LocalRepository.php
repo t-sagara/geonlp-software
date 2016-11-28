@@ -169,7 +169,7 @@ class LocalRepository
       if ($GLOBALS['geonlp_server'] != DEFAULT_GEONLP_SERVER) {
 	$url = preg_replace('!'.DEFAULT_GEONLP_SERVER.'!', $GLOBALS['geonlp_server'], $url);
       }
-      $zipcontent = \file_get_contents($url);
+      $zipcontent = \file_get_contents($url, false, get_stream_context());
       $zipfile = $this->wd.'/zip/'.$id.'.zip';
       write_message(sprintf("\n- ファイル '%s' に保存します．\n", $zipfile));
       $file = \fopen($zipfile, 'w');
@@ -269,12 +269,12 @@ class LocalRepository
     $status = $this->check($dic);
     if ($status != 'need update') {
       write_message("この辞書は更新の必要がありません．\n");
-    } else {      
+    } else {
       // ダウンロード・インストールを行う
       $this->install($dic);
     }
   }
-  
+
   // 地名辞書一覧を作成する
   public function getDictionaries() {
     // 公開サーバの辞書を取得する
@@ -282,7 +282,7 @@ class LocalRepository
     if (!file_exists($dictionary_list)
 	|| time() - filemtime($dictionary_list) > 3600) {
       write_message(sprintf("GeoNLP サーバ '%s' から最新の辞書一覧を取得しています．\n", $GLOBALS['geonlp_server']));
-      $response = @file_get_contents($GLOBALS['geonlp_server']);
+      $response = @file_get_contents($GLOBALS['geonlp_server'], false, get_stream_context());
       if ($response !== FALSE) {
         file_put_contents($dictionary_list, $response);
       } else {
@@ -426,11 +426,11 @@ class LocalRepository
       write_message("インストール先ファイルを書き込み許可にするか，書き込み権限のあるユーザで実行してください．\n", array("status"=>"error"));
     }
     if ($total_error['unreadable'] > 0 || $total_error['unwritable'] > 0) return;
-    
+
     write_message("古いファイルは上書きされます．よろしいですか？[y/n] ");
     $in = trim(fgets(STDIN, 1024));
     if (strtolower($in) != 'y') return;
-    
+
     // コピー手順を出力
     foreach ($paths as $title => $filename) {
       $srcfile = $this->wd.'/'.$filename;
@@ -461,7 +461,7 @@ class LocalRepository
     */
     write_message("完了しました．\n");
   }
-  
+
   /**
    * CSV ファイルから辞書を作成する
    * 既存の辞書コードを指定した場合は上書きする
