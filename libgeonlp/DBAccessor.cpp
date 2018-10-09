@@ -527,10 +527,10 @@ namespace geonlp
 	const Geoword* wp = &(geowords[i]);
 	std::string json = wp->toJson(); 
 	// パラメータのバインド
-	sqlite3_bind_text(stm, 1, wp->get_geonlp_id().c_str(), wp->get_geonlp_id().length(), SQLITE_STATIC);
+	sqlite3_bind_text(stm, 1, wp->get_geonlp_id().c_str(), wp->get_geonlp_id().length(), SQLITE_TRANSIENT);
 	sqlite3_bind_int(stm, 2, wp->get_dictionary_id());
-	sqlite3_bind_text(stm, 3, wp->get_entry_id().c_str(), wp->get_entry_id().length(), SQLITE_STATIC);
-	sqlite3_bind_text(stm, 4, json.c_str(), json.length(), SQLITE_STATIC);
+	sqlite3_bind_text(stm, 3, wp->get_entry_id().c_str(), wp->get_entry_id().length(), SQLITE_TRANSIENT);
+	sqlite3_bind_text(stm, 4, json.c_str(), json.length(), SQLITE_TRANSIENT);
 
 	// 実行
 	rc = sqlite3_step(stm);
@@ -620,9 +620,9 @@ namespace geonlp
 	const std::string& json = wp->toJson(); 
 	// パラメータのバインド
 	sqlite3_bind_int(stmt, 1, wp->get_internal_id());
-	sqlite3_bind_text(stmt, 2, user_code.c_str(), user_code.length(), SQLITE_STATIC);
-	sqlite3_bind_text(stmt, 3, dict_code.c_str(), dict_code.length(), SQLITE_STATIC);
-	sqlite3_bind_text(stmt, 4, json.c_str(), json.length(), SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 2, user_code.c_str(), user_code.length(), SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 3, dict_code.c_str(), dict_code.length(), SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 4, json.c_str(), json.length(), SQLITE_TRANSIENT);
 
 	// 実行
 	rc = sqlite3_step(stmt);
@@ -718,9 +718,9 @@ namespace geonlp
 	const Wordlist* wp = &(wordlists[i]);
 	// パラメータのバインド
 	sqlite3_bind_int(stm, 1, wp->get_id());
-	sqlite3_bind_text(stm, 2, wp->get_surface().c_str(), wp->get_surface().length(), SQLITE_STATIC);
-	sqlite3_bind_text(stm, 3, wp->get_idlist().c_str(), wp->get_idlist().length(), SQLITE_STATIC);
-	sqlite3_bind_text(stm, 4, wp->get_yomi().c_str(), wp->get_yomi().length(), SQLITE_STATIC);
+	sqlite3_bind_text(stm, 2, wp->get_surface().c_str(), wp->get_surface().length(), SQLITE_TRANSIENT);
+	sqlite3_bind_text(stm, 3, wp->get_idlist().c_str(), wp->get_idlist().length(), SQLITE_TRANSIENT);
+	sqlite3_bind_text(stm, 4, wp->get_yomi().c_str(), wp->get_yomi().length(), SQLITE_TRANSIENT);
 
 	// 実行
 	rc = sqlite3_step(stm);
@@ -1020,10 +1020,10 @@ namespace geonlp
       unsigned int id = 0;
       for (std::vector<Wordlist>::iterator it = wordlists.begin(); it != wordlists.end(); it++) {
 	sqlite3_bind_int(stmt, 1, (*it).get_id());
-	sqlite3_bind_text(stmt, 2, (*it).get_key().c_str(), (*it).get_key().length(), SQLITE_STATIC);
-	sqlite3_bind_text(stmt, 3, (*it).get_surface().c_str(), (*it).get_surface().length(), SQLITE_STATIC);
-	sqlite3_bind_text(stmt, 4, (*it).get_idlist().c_str(), (*it).get_idlist().length(), SQLITE_STATIC);
-	sqlite3_bind_text(stmt, 5, (*it).get_yomi().c_str(), (*it).get_yomi().length(), SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 2, (*it).get_key().c_str(), (*it).get_key().length(), SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 3, (*it).get_surface().c_str(), (*it).get_surface().length(), SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 4, (*it).get_idlist().c_str(), (*it).get_idlist().length(), SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 5, (*it).get_yomi().c_str(), (*it).get_yomi().length(), SQLITE_TRANSIENT);
 	
 	rc = sqlite3_step(stmt);
 	if (rc != SQLITE_DONE) {

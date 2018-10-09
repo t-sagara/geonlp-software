@@ -2,14 +2,14 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.61])
-AC_INIT([geonlp], [1.2.0], [geonlp@info-proto.com])
-AM_INIT_AUTOMAKE([geonlp], [1.2.0])
+AC_INIT([geonlp], [1.2.1], [geonlp@info-proto.com])
+AM_INIT_AUTOMAKE([geonlp], [1.2.1])
 AC_CONFIG_SRCDIR([src/])
 AC_CONFIG_HEADER([include/config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 # library version
-LIB_VERSION_INFO='1.2.0'
+LIB_VERSION_INFO='1.2.1'
 AC_SUBST(LIB_VERSION_INFO)
 
 # basename of resource file
