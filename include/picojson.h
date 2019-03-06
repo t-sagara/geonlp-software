@@ -259,6 +259,7 @@ namespace picojson {
       __assume(0);
 #endif
     }
+    return "null";
   }
   
   template <typename Iter> void copy(const std::string& s, Iter oi) {

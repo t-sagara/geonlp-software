@@ -90,7 +90,7 @@ namespace geonlp
 
     // 収録固有名クラス
     inline void set_subject(const std::vector<std::string>& v) { this->_set_string_list("subject", v); }
-    inline std::vector<std::string> get_subject() const throw (picojson::PicojsonException) { this->_get_string_list("subject"); }
+    inline std::vector<std::string> get_subject() const throw (picojson::PicojsonException) { return this->_get_string_list("subject"); }
 
     /// 定義済み項目から取得可能な利便性の高い情報
 

@@ -105,7 +105,7 @@ namespace picojson
     inline bool has_key(const std::string& key) { int c = this->_v.get<picojson::object>().count(key); return c > 0; }
 
     // 要素を削除
-    inline int erase(const std::string& key) { this->_v.get<picojson::object>().erase(key); }
+    inline void erase(const std::string& key) { this->_v.get<picojson::object>().erase(key); }
 
     // オブジェクトのキー一覧を取得する
     std::vector<std::string> get_keys() const;
