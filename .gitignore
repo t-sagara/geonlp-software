@@ -63,3 +63,5 @@ src/geonlp_api_server
 src/geonlp_ma
 src/geonlp_rebuild
 src/geonlp_cgi
+python-extension/nontracked
+
