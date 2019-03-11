@@ -18,6 +18,11 @@
 *~
 .libs/
 .deps/
+*.egg_info/
+__pycache__
+
+# json files for tests
+/*.json
 
 Makefile
 Makefile.in

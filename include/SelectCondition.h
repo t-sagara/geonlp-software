@@ -15,13 +15,6 @@
 #include "Geoword.h"
 #include "picojsonExt.h"
 
-#ifdef HAVE_LIBGDAL
-#include "ogr_api.h"
-#include "ogrsf_frmts.h"
-#include "ogr_feature.h"
-#include "ogr_geometry.h"
-#endif /* HAVE_LIBGDAL */
-
 namespace geonlp
 {
   // 例外クラス
@@ -34,26 +27,6 @@ namespace geonlp
   // 検索条件、重みづけなどの制約を管理するベースクラス
   class SelectCondition {
   protected:
-
-#ifdef HAVE_LIBGDAL
-    // オプションの値から空間データを用意する
-    void set_spatial_sources(const picojson::value& v);
-
-    // 作成した空間データを削除する
-    void clear_spatial_sources(void);
-
-    // この条件で利用する空間的なデータ源
-    std::vector<OGRDataSource*> _ogrDataSources;
-    
-    // URL またはファイルから空間データを追加する
-    int add_spatial_data_source(const std::string& url);
-
-    // GeoJSON 形式の空間データを追加する
-    int add_geojson_source(const picojson::value& v);
-
-    // 読み込みの際に作成した一時ファイルのリスト
-    std::vector<std::string> _tmpfiles;
-#endif /* HAVE_LIBGDAL */    
 
     // 年月日表記のチェックと正規化
     // YYYYMMDD または YYYY-MM-DD を受け付け、 YYYYMMDD を返す

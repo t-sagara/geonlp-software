@@ -43,7 +43,6 @@ namespace geonlp
       // surface -> properties.surface
       picojson::value surface = v.get("surface");
       picojson::object properties;
-      
       picojson::value geo = v.get("geo");
       if (geo.is<picojson::null>()) {
 	// non-geo object
@@ -54,8 +53,12 @@ namespace geonlp
 	geo = picojson::value(o);
       } else {
 	// geo-object
+	picojson::value candidates = v.get("candidates");
 	picojson::object o = geo.get("properties").get<picojson::object>();
 	o.insert(std::make_pair("surface", surface));
+	if (!candidates.is<picojson::null>()) {
+	  o.insert(std::make_pair("candidates", v.get("candidates")));
+	}
 	geo.get<picojson::object>().erase("properties");
 	geo.get<picojson::object>().insert(std::make_pair("properties", o));
 	// geo.get<picojson::object>().insert(std::make_pair("properties", properties));
@@ -495,11 +498,7 @@ namespace geonlp
 #ifdef HAVE_LIBDAMS
     this->_options.set_value("geocoding", "normal");
 #endif /* HAVE_LIBDAMS */
-#ifdef HAVE_LIBGDAL
-    this->_options.set_value("spatial-condition", picojson::null());
-#endif /* HAVE_LIBGDAL */
     this->_options.set_value("temporal-condition", picojson::null());
-    this->_options.set_value("geojson", false);
     this->_ma_ptr->resetActiveDictionaries();
     this->_ma_ptr->resetActiveClasses();
     this->_context.setOptions(this->_options);

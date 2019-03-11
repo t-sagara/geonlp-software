@@ -154,7 +154,7 @@ static PyMethodDef GeonlpModuleMethods[] = {
 
 static struct PyModuleDef GeonlpModule = {
   PyModuleDef_HEAD_INIT,
-  "geonlp", // m_name
+  "pygeonlp", // m_name
   NULL,     // m_doc
   -1,       // m_size
   GeonlpModuleMethods, // m_methods
@@ -169,7 +169,7 @@ static struct PyModuleDef GeonlpModule = {
  */
 
 PyMODINIT_FUNC
-PyInit_geonlp (void)
+PyInit_pygeonlp (void)
 // Create the module
 {
 
@@ -177,7 +177,7 @@ PyInit_geonlp (void)
   static PyTypeObject GeonlpServiceType = {
     PyVarObject_HEAD_INIT(NULL, 0)
   };
-  GeonlpServiceType.tp_name = "geonlp.service";
+  GeonlpServiceType.tp_name = "pygeonlp.service";
   GeonlpServiceType.tp_new = PyType_GenericNew;
   GeonlpServiceType.tp_basicsize = sizeof(GeonlpService);
   GeonlpServiceType.tp_dealloc = (destructor) geonlp_service_dealloc;
@@ -193,7 +193,7 @@ PyInit_geonlp (void)
   static PyTypeObject GeonlpMAType = {
     PyVarObject_HEAD_INIT(NULL, 0)
   };
-  GeonlpMAType.tp_name = "geonlp.ma";
+  GeonlpMAType.tp_name = "pygeonlp.ma";
   GeonlpMAType.tp_new = PyType_GenericNew;
   GeonlpMAType.tp_basicsize = sizeof(GeonlpMA);
   GeonlpMAType.tp_dealloc = (destructor) geonlp_ma_dealloc;

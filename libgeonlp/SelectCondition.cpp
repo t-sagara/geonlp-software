@@ -43,93 +43,11 @@ namespace geonlp
 
   // コンストラクタ
   SelectCondition::SelectCondition() {
-#ifdef HAVE_LIBGDAL
-    this->_ogrDataSources.clear();
-    this->_tmpfiles.clear();
-    OGRRegisterAll();
-#endif /* HAVE_LIBGDAL */    
   }
 
   // デストラクタ
   SelectCondition::~SelectCondition() {
-#ifdef HAVE_LIBGDAL
-    this->clear_spatial_sources();
-    OGRCleanupAll();
-#endif /* HAVE_LIBGDAL */
   }
-
-#ifdef HAVE_LIBGDAL
-  // JSON オプションパラメータから空間データを構築
-  void SelectCondition::set_spatial_sources(const picojson::value& op_v) {
-    this->clear_spatial_sources();
-    if (op_v.is<picojson::null>()) return;
-    if (op_v.is<std::string>()) {
-      // 文字列が一つの場合は外部ファイルの URL を指定
-      this->add_spatial_data_source(op_v.to_str());
-    } if (op_v.is<picojson::object>()) {
-      // オブジェクト一つの場合は GeoJSON として追加
-      this->add_geojson_source(op_v);
-    } else if (op_v.is<picojson::array>()) {
-      // 配列の場合は、複数の外部ファイルもしくは GeoJSON を指定
-      picojson::array sources = op_v.get<picojson::array>();
-      for (picojson::array::iterator it = sources.begin(); it != sources.end(); it++) {
-	picojson::value& v = (*it);
-	if (v.is<std::string>()) {
-	  // 外部ファイルの URL
-	  this->add_spatial_data_source(v.to_str());
-	} else if (v.is<picojson::object>()) {
-	  // GeoJSON, 一時ファイルに保存する
-	  this->add_geojson_source(v);
-	}
-      }
-    }
-  }
-
-  // 用意した空間データを削除
-  void SelectCondition::clear_spatial_sources(void) {
-    if (this->_ogrDataSources.size() > 0) {
-      // 読み込み済みのデータソースをクリアする
-      for (std::vector<OGRDataSource*>::iterator it = this->_ogrDataSources.begin();
-	   it != this->_ogrDataSources.end(); it++) {
-	OGRDataSource::DestroyDataSource((*it));
-      }
-      this->_ogrDataSources.clear();
-    }
-    if (this->_tmpfiles.size() > 0) { // 一時ファイルを削除する
-      for (std::vector<std::string>::iterator it = this->_tmpfiles.begin();
-	   it != this->_tmpfiles.end(); it++) {
-	std::remove((*it).c_str());
-      }
-      this->_tmpfiles.clear();
-    }
-  }
-  
-  // データソースを追加する
-  int SelectCondition::add_spatial_data_source(const std::string& url) {
-    OGRSFDriver* poDriver;
-    OGRDataSource* poDataSource;
-    poDataSource = OGRSFDriverRegistrar::Open(url.c_str(), FALSE, &(poDriver));
-    if (poDataSource == NULL) {
-      std::stringstream ss;
-      ss << "Fail to read spatial-condition data, url:'" << url << "'";
-      throw SelectConditionException(ss.str());
-    }
-    // std::cerr << "Successfully read " << url << "." << std::endl;
-    this->_ogrDataSources.push_back(poDataSource);
-  }
-
-  // GeoJSON を追加する
-  int SelectCondition::add_geojson_source(const picojson::value& v) {
-    std::string tmp_filename = std::tmpnam(NULL);
-    tmp_filename += "_geonlp_tmp.geojson";
-    std::ofstream ofs;
-    ofs.open(tmp_filename.c_str(), std::ios::out);
-    ofs << v.serialize();
-    ofs.close();
-    this->_tmpfiles.push_back(tmp_filename);
-    this->add_spatial_data_source(tmp_filename);
-  }
-#endif /* HAVE_LIBGDAL */
 
   void SelectCondition::unsupported_action(const std::string& name) throw (SelectConditionException) 
   {
@@ -157,60 +75,11 @@ namespace geonlp
    *****************************/
 
   void SelectConditionGeoContains::set(picojson::ext& options) {
-#ifdef HAVE_LIBGDAL
-    if (!options.has_key("geo-contains")) return;
-    const picojson::value& op_v = options.get_value("geo-contains");
-    this->set_spatial_sources(op_v);
-#else
     this->unsupported_action("geo-contains");
-#endif /* HAVE_LIBGDAL */
   }
 
   double SelectConditionGeoContains::judge(const Geoword* pGeoword) {
     double result = 1.0;
-#ifdef HAVE_LIBGDAL
-    // std::cerr << "#sources = " << this->_ogrDataSources.size() << std::endl;
-    if (this->_ogrDataSources.size() == 0) return result;
-    // 内外判定
-    int isInside = 0;
-    double longitude, latitude;
-    std::stringstream sslat, sslon;
-    sslat << pGeoword->get_latitude();
-    sslat >> latitude;
-    sslon << pGeoword->get_longitude();
-    sslon >> longitude;
-    OGRPoint targetPoint(longitude, latitude);
-    // データソースを巡回
-    for (std::vector<OGRDataSource*>::iterator it = this->_ogrDataSources.begin();
-	 it != this->_ogrDataSources.end(); it++) {
-      OGRDataSource* poDataSource = (OGRDataSource*)(*it);
-      // レイヤを取得
-      int nLayers = poDataSource->GetLayerCount();
-      // std::cerr << nLayers << " layers found." << std::endl;
-      for (int iLayer = 0; iLayer < poDataSource->GetLayerCount(); iLayer++) {
-        if (isInside > 0) break;
-        OGRLayer* poLayer = poDataSource->GetLayer(iLayer); // Don't delete
-        if (poLayer->GetLayerDefn()->GetGeomType() == wkbPolygon
-	  || poLayer->GetLayerDefn()->GetGeomType() == wkbMultiPolygon) {
-	  // std::cerr << "Layer " << iLayer << " is Polygon, " << OGRGeometryTypeToName(poLayer->GetLayerDefn()->GetGeomType()) << std::endl;
-	  OGRFeature *poFeature;
-	  poLayer->ResetReading();
-	  while ((poFeature = poLayer->GetNextFeature()) != NULL) { // Must destroy
-	    OGRGeometry* poGeometry = poFeature->GetGeometryRef();  // Don't delete
-	    if (poGeometry->Contains(&targetPoint)) {
-	      isInside = 1;
-	    }
-	    OGRFeature::DestroyFeature(poFeature);
-	    if (isInside > 0) break;
-	  }
-	} else {
-	  // std::cerr << "Layer " << iLayer << " is not Polygon, " << OGRGeometryTypeToName(poLayer->GetLayerDefn()->GetGeomType()) << std::endl;
-	}
-      }
-    }
-    result = (isInside == 0) ? -1.0 : 1.0;
-    // std::cerr << result << std::endl;
-#endif /* HAVE_LIBGDAL */
     return result;
   }
 
@@ -219,60 +88,11 @@ namespace geonlp
    *****************************/
 
   void SelectConditionGeoDisjoint::set(picojson::ext& options) {
-#ifdef HAVE_LIBGDAL
-    if (options.is_null("geo-disjoint")) return;
-    const picojson::value& op_v = options.get_value("geo-disjoint");
-    this->set_spatial_sources(op_v);
-#else
     this->unsupported_action("geo-disjoint");
-#endif /* HAVE_LIBGDAL */
   }
 
   double SelectConditionGeoDisjoint::judge(const Geoword* pGeoword) {
     double result = 1.0;
-#ifdef HAVE_LIBGDAL
-    // std::cerr << "#sources = " << this->_ogrDataSources.size() << std::endl;
-    if (this->_ogrDataSources.size() == 0) return result;
-    // 内外判定
-    int isInside = 0;
-    double longitude, latitude;
-    std::stringstream sslat, sslon;
-    sslat << pGeoword->get_latitude();
-    sslat >> latitude;
-    sslon << pGeoword->get_longitude();
-    sslon >> longitude;
-    OGRPoint targetPoint(longitude, latitude);
-    // データソースを巡回
-    for (std::vector<OGRDataSource*>::iterator it = this->_ogrDataSources.begin();
-	 it != this->_ogrDataSources.end(); it++) {
-      OGRDataSource* poDataSource = (OGRDataSource*)(*it);
-      // レイヤを取得
-      int nLayers = poDataSource->GetLayerCount();
-      std::cerr << nLayers << " layers found." << std::endl;
-      for (int iLayer = 0; iLayer < poDataSource->GetLayerCount(); iLayer++) {
-        if (isInside > 0) break;
-        OGRLayer* poLayer = poDataSource->GetLayer(iLayer); // Don't delete
-        if (poLayer->GetLayerDefn()->GetGeomType() == wkbPolygon
-	  || poLayer->GetLayerDefn()->GetGeomType() == wkbMultiPolygon) {
-	  // std::cerr << "Layer " << iLayer << " is Polygon, " << OGRGeometryTypeToName(poLayer->GetLayerDefn()->GetGeomType()) << std::endl;
-	  OGRFeature *poFeature;
-	  poLayer->ResetReading();
-	  while ((poFeature = poLayer->GetNextFeature()) != NULL) { // Must destroy
-	    OGRGeometry* poGeometry = poFeature->GetGeometryRef();  // Don't delete
-	    if (poGeometry->Contains(&targetPoint)) {
-	      isInside = 1;
-	    }
-	    OGRFeature::DestroyFeature(poFeature);
-	    if (isInside > 0) break;
-	  }
-	} else {
-	  std::cerr << "Layer " << iLayer << " is not Polygon, " << OGRGeometryTypeToName(poLayer->GetLayerDefn()->GetGeomType()) << std::endl;
-	}
-      }
-    }
-    result = (isInside == 0) ? 1.0 : -1.0;
-    // std::cerr << result << std::endl;
-#endif /* HAVE_LIBGDAL */
     return result;
   }
 
@@ -510,9 +330,9 @@ namespace geonlp
     std::string valid_to   = SelectCondition::_get_ymd(pGeoword->get_valid_to());
 
     double isValid = 1.0;
-    if (valid_from != "" && valid_from > this->_from_ymd) {
+    if (valid_from != "" && valid_from < this->_from_ymd) {
       isValid = -1.0;
-    } else if (valid_to != "" && valid_to < this->_to_ymd) {
+    } else if (valid_to != "" && valid_to > this->_to_ymd) {
       isValid = -1.0;
     }
 

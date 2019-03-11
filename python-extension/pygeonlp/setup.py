@@ -1,20 +1,20 @@
 from distutils.core import setup, Extension
 
 module1 = Extension(
-    'geonlp',
+    'pygeonlp',
     define_macros=[
         ('MAJOR_VERSION', '1'),
         ('MINOR_VERSION', '0'),
         ('REVISION', '0')
     ],
-    include_dirs=['/usr/include', '../include'],
+    include_dirs=['/usr/include', '../../include'],
     libraries=['geonlp', 'mecab', 'sqlite3'],
     library_dirs=['/usr/lib', '/usr/local/lib'],
-    sources=['geonlp.cpp']
+    sources=['pygeonlp.cpp']
 )
 
 setup(
-    name='geonlp',
+    name='pygeonlp',
     version='1.0.0',
     description='GeoNLP python module',
     author='Takeshi Sagara',

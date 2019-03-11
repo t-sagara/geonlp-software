@@ -25,8 +25,10 @@ namespace geonlp
     // geo->geometry オブジェクトの作成
     std::vector<double> coordinates;
     double longitude, latitude;
-    coordinates.push_back(this->get_longitude());
-    coordinates.push_back(this->get_latitude());
+    longitude = this->get_longitude();
+    latitude = this->get_latitude();
+    coordinates.push_back(longitude);
+    coordinates.push_back(latitude);
     geometry.set_value("coordinates", coordinates);
     geometry.set_value("type", "Point");
 
@@ -35,6 +37,8 @@ namespace geonlp
     properties.set_value("standard_form", this->get_standard_form());
     properties.set_value("address", this->get_address_element());
     properties.set_value("code", this->get_code());
+    properties.set_value("longitude", longitude);
+    properties.set_value("latitude", latitude);
 
     // geo オブジェクトの作成
     geo.set_value("type", "Feature");

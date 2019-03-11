@@ -3,8 +3,8 @@ CXXFLAGS = -g -DPROFILE_DEFAULT_DIR_PATH=\"/usr/local/etc\" -DPACKAGE_NAME=\"geo
 #CXXFLAGS = -g -DHAVE_LIBDAMS -DPROFILE_DEFAULT_DIR_PATH=\"/usr/local/etc\" -I../../include
 #CXXFLAGS = -g -DDEBUG -DHAVE_LIBDAMS -DPROFILE_DEFAULT_DIR_PATH=\"/usr/local/etc\" -I../../include
 #CXXFLAGS = -pg -DPROFILE_DEFAULT_DIR_PATH=\"/usr/local/etc\" -I../../include
-LFLAGS   = -lsqlite3 -lboost_regex -lboost_filesystem -lmecab -L/data/geonlp/lib -ldams -lgdal
-#LFLAGS   = -lsqlite3 -lboost_regex -lboost_filesystem -lmecab
+# LFLAGS   = -lsqlite3 -lboost_regex -lboost_filesystem -lmecab -L/data/geonlp/lib -ldams -lgdal
+LFLAGS   = -lsqlite3 -lboost_regex -lboost_filesystem -lmecab -ldams
 
 OBJS     = ../picojsonExt.o ../Geoword.o ../Address.o ../Dictionary.o \
         ../Profile.o ../DBAccessor.o ../CSVReader.o \
