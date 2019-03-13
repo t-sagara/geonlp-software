@@ -18,8 +18,10 @@
 *~
 .libs/
 .deps/
-*.egg_info/
-__pycache__
+*.egg-info/
+__pycache__/
+build/
+dist/
 
 # json files for tests
 /*.json

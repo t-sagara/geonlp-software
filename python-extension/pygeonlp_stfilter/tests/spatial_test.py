@@ -15,5 +15,12 @@ request = {
 }
 
 response = json.loads(g.proc(json.dumps(request)))
-filtered = spatial.geo_contains(response, geojson)
-pp.pprint(filtered)
+pp.pprint(response)
+print("---------------")
+result1 = spatial.geo_contains(
+    response, geojson, keep_candidates=True, copy=True)
+pp.pprint(result1)
+print("---------------")
+result2 = spatial.geo_disjoint(
+    response, 'http://geoshape.ex.nii.ac.jp/city/geojson/20180101/13/13106A1968.geojson', keep_candidates=True)
+pp.pprint(result2)

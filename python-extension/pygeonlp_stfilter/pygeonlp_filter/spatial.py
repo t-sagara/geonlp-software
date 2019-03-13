@@ -56,26 +56,24 @@ def _get_geometry(str):
     return geo
 
 
-def geo_contains(geonlp_response, geojson):
+def geo_contains(geonlp_response, geojson, **kwargs):
     '''The geojson 'contains' the elements.'''
 
-    geo = _get_geometry(geojson)
-
-    def _geo_contains(candidate):
+    def _geo_contains(geo, candidate):
         return _spatial_filter(geo.Contains, candidate)
 
-    return st_filter.apply(_geo_contains, geonlp_response)
+    geo = _get_geometry(geojson)
+    return st_filter.apply(_geo_contains, geo, geonlp_response, **kwargs)
 
 
-def geo_disjoint(geonlp_response, geojson):
+def geo_disjoint(geonlp_response, geojson, **kwargs):
     '''The geojson 'disjoint' the elements.'''
 
-    geo = _get_geometry(geojson)
-
-    def _geo_disjoint(candidate):
+    def _geo_disjoint(geo, candidate):
         return _spatial_filter(geo.Disjoint, candidate)
 
-    return st_filter.apply(_geo_disjoint, geonlp_response)
+    geo = _get_geometry(geojson)
+    return st_filter.apply(_geo_disjoint, geo, geonlp_response, **kwargs)
 
 
 def _spatial_filter(func, candidate):
@@ -93,3 +91,20 @@ def _spatial_filter(func, candidate):
         return True
 
     return False
+
+
+if __name__ == '__main__':
+    geojson = '{"type":"Polygon","coordinates":[[[139.457008,35.513569],[140.011817,35.513569],[140.011817,36.030563],[139.457008,36.030562],[139.457008,35.513569]]]}'
+
+    g = pygeonlp.Service()
+    request = {
+        "method": "parse",
+        "params": ["今日は上野の野外ステージでコンサートだった。（事務所：東京都台東区上野公園7-47）", {"show-candidate": True, "geojson": True}],
+        "id": 1
+    }
+
+    response = json.loads(g.proc(json.dumps(request)))
+
+    result1 = geo_disjoint(
+        response, geojson)
+    print(result1)

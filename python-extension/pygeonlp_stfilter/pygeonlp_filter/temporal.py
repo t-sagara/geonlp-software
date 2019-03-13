@@ -7,9 +7,7 @@ from pygeonlp_filter import st_filter
 def time_exists(geonlp_response, date_from, date_to=None):
     '''The elements exist between the date_from and date_to'''
 
-    duration = _get_duration_from_dates(date_from, date_to)
-
-    def _time_exists(candidate):
+    def _time_exists(duration, candidate):
         if 'valid_from' in candidate:
             valid_from = _get_date_from_isostr(candidate['valid_from'])
             if valid_from > duration[1]:
@@ -22,15 +20,14 @@ def time_exists(geonlp_response, date_from, date_to=None):
 
         return True
 
-    return st_filter.apply(_time_exists, geonlp_response)
+    duration = _get_duration_from_dates(date_from, date_to)
+    return st_filter.apply(_time_exists, duration, geonlp_response, **kwargs)
 
 
 def time_before(geonlp_response, date_from, date_to=None):
     '''The elements exist before the date_from'''
 
-    duration = _get_duration_from_dates(date_from, date_to)
-
-    def _time_befor(candidate):
+    def _time_befor(duration, candidate):
         if 'valid_from' in candidate:
             valid_from = _get_date_from_isostr(candidate['valid_from'])
             if valid_from > duration[0]:
@@ -38,15 +35,14 @@ def time_before(geonlp_response, date_from, date_to=None):
 
         return True
 
-    return st_filter.apply(_time_before, geonlp_response)
+    duration = _get_duration_from_dates(date_from, date_to)
+    return st_filter.apply(_time_before, duration, geonlp_response, **kwargs)
 
 
 def time_after(geonlp_response, date_from, date_to=None):
     '''The elements exist after the date_to'''
 
-    duration = _get_duration_from_dates(date_from, date_to)
-
-    def _time_after(candidate):
+    def _time_after(duration, candidate):
         if 'valid_to' in candidate:
             valid_to = _get_date_from_isostr(candidate['valid_to'])
             if valid_to < duration[1]:
@@ -54,15 +50,14 @@ def time_after(geonlp_response, date_from, date_to=None):
 
         return True
 
-    return st_filter.apply(_time_after, geonlp_response)
+    duration = _get_duration_from_dates(date_from, date_to)
+    return st_filter.apply(_time_after, duration, geonlp_response, **kwargs)
 
 
 def time_overlaps(geonlp_response, date_from, date_to=None):
     '''The elements exist between the date_from and the date_to'''
 
-    duration = _get_duration_from_dates(date_from, date_to)
-
-    def _time_overlaps(candidate):
+    def _time_overlaps(duration, candidate):
         if 'valid_from' in candidate:
             valid_from = _get_date_from_isostr(candidate['valid_from'])
             if valid_from > duration[1]:
@@ -75,15 +70,14 @@ def time_overlaps(geonlp_response, date_from, date_to=None):
 
         return True
 
-    return st_filter.apply(_time_overlaps, geonlp_response)
+    duration = _get_duration_from_dates(date_from, date_to)
+    return st_filter.apply(_time_overlaps, duration, geonlp_response, **kwargs)
 
 
 def time_contains(geonlp_response, date_from, date_to=None):
     '''The elements exist only between the date_from and the date_to'''
 
-    duration = _get_duration_from_dates(date_from, date_to)
-
-    def _time_contains(candidate):
+    def _time_contains(duration, candidate):
         if 'valid_from' in candidate:
             valid_from = _get_date_from_isostr(candidate['valid_from'])
             if valid_from < duration[0]:
@@ -96,7 +90,8 @@ def time_contains(geonlp_response, date_from, date_to=None):
 
         return True
 
-    return st_filter.apply(_time_contins, geonlp_response)
+    duration = _get_duration_from_dates(date_from, date_to)
+    return st_filter.apply(_time_contins, duration, geonlp_response, **kwargs)
 
 
 def _get_date_from_isostr(datestr):
