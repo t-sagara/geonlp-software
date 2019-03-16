@@ -12,7 +12,7 @@ def apply(func, param, geonlp_response, **kwargs):
 Generate and return the modified result
 containing only elements passed through the filter function.
 '''
-    response_type = get_response_type(
+    geonlp_response, response_type = get_response_type(
         geonlp_response)  # validate the response
 
     if 'copy' in kwargs:
@@ -26,7 +26,7 @@ containing only elements passed through the filter function.
         # Feature collection type response
         features = []
 
-        for feature in geonlp_response['result']['features']:
+        for feature in geonlp_response['features']:
             if 'geometry' not in feature or feature['geometry'] is None:
                 features.append(feature)
                 continue
@@ -86,13 +86,13 @@ containing only elements passed through the filter function.
 
                 features.append(feature)
 
-        geonlp_response['result']['features'] = features
+        geonlp_response['features'] = features
 
     elif response_type == 'list':
         # List type response
         elements = []
 
-        for element in geonlp_response['result']:
+        for element in geonlp_response:
             if 'geo' not in element:
                 elements.append(element)
                 continue
@@ -143,7 +143,7 @@ containing only elements passed through the filter function.
 
                 elements.append(element)
 
-        geonlp_response['result'] = elements
+        geonlp_response = elements
 
     return geonlp_response
 
@@ -182,15 +182,14 @@ def get_response_type(geonlp_response):
     Otherwise, return 'list'.
     '''
 
-    if 'result' not in geonlp_response:
-        raise TypeError(
-            'The response is not a geonlp response. (No \'result\' member)')
+    if isinstance(geonlp_response, dict) and 'result' in geonlp_response:
+        geonlp_response = geonlp_response['result']
 
-    if 'features' in geonlp_response['result']:
-        return 'collection'
+    if isinstance(geonlp_response, dict) and 'features' in geonlp_response:
+        return [geonlp_response, 'collection']
 
-    if isinstance(geonlp_response['result'], list):
-        return 'list'
+    if isinstance(geonlp_response, list):
+        return [geonlp_response, 'list']
 
     raise TypeError(
         'The response is not a geonlp response.'

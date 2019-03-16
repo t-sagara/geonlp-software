@@ -4,7 +4,7 @@ import re
 from pygeonlp_filter import st_filter
 
 
-def time_exists(geonlp_response, date_from, date_to=None):
+def time_exists(geonlp_response, date_from, date_to=None, **kwargs):
     '''The elements exist between the date_from and date_to'''
 
     def _time_exists(duration, candidate):
@@ -24,7 +24,7 @@ def time_exists(geonlp_response, date_from, date_to=None):
     return st_filter.apply(_time_exists, duration, geonlp_response, **kwargs)
 
 
-def time_before(geonlp_response, date_from, date_to=None):
+def time_before(geonlp_response, date_from, date_to=None, **kwargs):
     '''The elements exist before the date_from'''
 
     def _time_befor(duration, candidate):
@@ -39,7 +39,7 @@ def time_before(geonlp_response, date_from, date_to=None):
     return st_filter.apply(_time_before, duration, geonlp_response, **kwargs)
 
 
-def time_after(geonlp_response, date_from, date_to=None):
+def time_after(geonlp_response, date_from, date_to=None, **kwargs):
     '''The elements exist after the date_to'''
 
     def _time_after(duration, candidate):
@@ -54,7 +54,7 @@ def time_after(geonlp_response, date_from, date_to=None):
     return st_filter.apply(_time_after, duration, geonlp_response, **kwargs)
 
 
-def time_overlaps(geonlp_response, date_from, date_to=None):
+def time_overlaps(geonlp_response, date_from, date_to=None, **kwargs):
     '''The elements exist between the date_from and the date_to'''
 
     def _time_overlaps(duration, candidate):
@@ -74,7 +74,7 @@ def time_overlaps(geonlp_response, date_from, date_to=None):
     return st_filter.apply(_time_overlaps, duration, geonlp_response, **kwargs)
 
 
-def time_contains(geonlp_response, date_from, date_to=None):
+def time_contains(geonlp_response, date_from, date_to=None, **kwargs):
     '''The elements exist only between the date_from and the date_to'''
 
     def _time_contains(duration, candidate):
