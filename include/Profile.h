@@ -34,6 +34,8 @@ namespace geonlp {
     std::vector<Suffix> suffix;
     std::string spatial_str;
     std::vector<std::string> spatial;
+    std::string non_geoword_str;
+    std::vector<std::string> non_geoword;
     std::string dictionary_str;
     std::vector<std::string> dictionary;
     std::string ne_class_str;
@@ -76,6 +78,14 @@ namespace geonlp {
 
     inline const std::vector<std::string>& get_spatial() const {
       return spatial;
+    }
+
+    inline const std::string& get_non_geoword_str() const {
+      return non_geoword_str;
+    }
+
+    inline const std::vector<std::string>& get_non_geoword() const {
+      return non_geoword;
     }
 
     inline const std::string& get_dictionary_str() const {

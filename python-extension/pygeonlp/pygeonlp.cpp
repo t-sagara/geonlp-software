@@ -4,6 +4,9 @@
 
 // ref: https://docs.python.org/3/extending/newtypes_tutorial.html
 
+picojson::value pyobject_to_picojson(PyObject *);
+PyObject* picojson_to_pyobject(const picojson::value&);
+
 /**
  * Define GeonlpService Object
  */
@@ -63,17 +66,189 @@ static PyObject * geonlp_service_proc(GeonlpService *self, PyObject *args)
   }
 
   picojson::ext p(str);
-  picojson::value response = (self->_ptrObj)->proc(picojson::value(p));
-  std::string json_response_str = response.serialize();
+  try {
+    picojson::value response = (self->_ptrObj)->proc(picojson::value(p));
+    std::string json_response_str = response.serialize();
+    return Py_BuildValue("s", json_response_str.c_str(), 1);
+  } catch (geonlp::ServiceRequestFormatException e) {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+  }
+    
+  return NULL;
+}
 
-  return Py_BuildValue("s", json_response_str.c_str(), 1);
+static PyObject * geonlp_service_parse(GeonlpService *self, PyObject *args)
+// Parses sentense(s) and extracts geo-words as a list or a geojson.
+{
+  PyObject *param1 = NULL;
+  PyObject *param2 = NULL;
+  picojson::array pico_ary;
+
+  if (!PyArg_ParseTuple(args, "O|O", &param1, &param2)) {
+    return NULL;
+  }
+
+  pico_ary.push_back(pyobject_to_picojson(param1));
+  if (param2) {
+    pico_ary.push_back(pyobject_to_picojson(param2));
+  }
+
+  try {
+    picojson::value result = (self->_ptrObj)->parse(pico_ary);
+    return picojson_to_pyobject(result);
+  } catch (geonlp::ServiceRequestFormatException e) {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+  }
+  return NULL;
+}
+
+static PyObject * geonlp_service_parse_structured(GeonlpService *self, PyObject *args)
+// Parses sentenses and extracts geo-words as a structured text.
+{
+  PyObject *param1 = NULL;
+  PyObject *param2 = NULL;
+  picojson::array pico_ary;
+
+  if (!PyArg_ParseTuple(args, "O|O", &param1, &param2)) {
+    return NULL;
+  }
+
+  pico_ary.push_back(pyobject_to_picojson(param1));
+  if (param2) {
+    pico_ary.push_back(pyobject_to_picojson(param2));
+  }
+
+  try {
+    picojson::value result = (self->_ptrObj)->parseStructured(pico_ary);
+    return picojson_to_pyobject(result);
+  } catch (geonlp::ServiceRequestFormatException e) {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+  }
+  return NULL;
+}
+
+static PyObject * geonlp_service_search(GeonlpService *self, PyObject *args)
+// Search geo-words from the surface or kana.
+{
+  const char *param1 = NULL;
+  PyObject *param2 = NULL;
+  picojson::array pico_ary;
+
+  if (!PyArg_ParseTuple(args, "s|O", &param1, &param2)) {
+    return NULL;
+  }
+
+  pico_ary.push_back(picojson::value(std::string(param1)));
+  if (param2) {
+    pico_ary.push_back(pyobject_to_picojson(param2));
+  }
+
+  try {
+    picojson::value result = (self->_ptrObj)->search(pico_ary);
+    return picojson_to_pyobject(result);
+  } catch (geonlp::ServiceRequestFormatException e) {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+  }
+  return NULL;
+}
+
+static PyObject * geonlp_service_get_geo_info(GeonlpService *self, PyObject *args)
+// Get attributes of geo-words from their geonlp_id list.
+{
+  PyObject *param1 = NULL;
+  picojson::array pico_ary;
+
+  if (!PyArg_ParseTuple(args, "O", &param1)) {
+    return NULL;
+  }
+
+  pico_ary.push_back(pyobject_to_picojson(param1));
+
+  try {
+    picojson::value result = (self->_ptrObj)->getGeoInfo(pico_ary);
+    return picojson_to_pyobject(result);
+  } catch (geonlp::ServiceRequestFormatException e) {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+  }
+  return NULL;
+}
+
+static PyObject * geonlp_service_get_dictionaries(GeonlpService *self, PyObject *args)
+// Get list of the available dictionaries
+{
+  picojson::array pico_ary; // dummy
+  
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+
+  try {
+    picojson::value result = (self->_ptrObj)->getDictionaries(pico_ary);
+    return picojson_to_pyobject(result);
+  } catch (geonlp::ServiceRequestFormatException e) {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+  }
+  return NULL;
+}
+
+static PyObject * geonlp_service_get_dictionary_info(GeonlpService *self, PyObject *args)
+// Get attributes of dictionaries from their id list.
+{
+  PyObject *param1 = NULL;
+  picojson::array pico_ary;
+
+  if (!PyArg_ParseTuple(args, "O", &param1)) {
+    return NULL;
+  }
+
+  pico_ary.push_back(pyobject_to_picojson(param1));
+
+  try {
+    picojson::value result = (self->_ptrObj)->getDictionaryInfo(pico_ary);
+    return picojson_to_pyobject(result);
+  } catch (geonlp::ServiceRequestFormatException e) {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+  }
+  return NULL;
+}
+
+static PyObject * geonlp_service_address_geocoding(GeonlpService *self, PyObject *args)
+// Geocoding the address(es)
+{
+  PyObject *param1 = NULL;
+  PyObject *param2 = NULL;
+  picojson::array pico_ary;
+
+  if (!PyArg_ParseTuple(args, "O|O", &param1, &param2)) {
+    return NULL;
+  }
+
+  pico_ary.push_back(pyobject_to_picojson(param1));
+  if (param2) {
+    pico_ary.push_back(pyobject_to_picojson(param2));
+  }
+
+  try {
+    picojson::value result = (self->_ptrObj)->addressGeocoding(pico_ary);
+    return picojson_to_pyobject(result);
+  } catch (geonlp::ServiceRequestFormatException e) {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+  }
+  return NULL;
 }
 
 
 // GeonlpService object methods
 static PyMethodDef GeonlpServiceMethods[] = {
   {"version", (PyCFunction)geonlp_service_version, METH_NOARGS, "Show the version"},
-  {"proc", (PyCFunction)geonlp_service_proc, METH_VARARGS, "Proc the GeoNLP request"},
+  {"proc", (PyCFunction)geonlp_service_proc, METH_VARARGS, "Proc the GeoNLP request."},
+  {"parse", (PyCFunction)geonlp_service_parse, METH_VARARGS, "Parses sentense(s) and extracts geo-words as a structured text or a geojson."},
+  {"parseStructured", (PyCFunction)geonlp_service_parse_structured, METH_VARARGS, "Parses sentense(s) and extracts geo-words as a structured text."},
+  {"search", (PyCFunction)geonlp_service_search, METH_VARARGS, "Search geo-words from the surface or kana."},
+  {"getGeoInfo", (PyCFunction)geonlp_service_get_geo_info, METH_VARARGS, "Get attributes of geo-words from their geonlp_id list."},
+  {"getDictionaries", (PyCFunction)geonlp_service_get_dictionaries, METH_VARARGS, "Get list of the available dictionaries."},
+  {"getDictionaryInfo", (PyCFunction)geonlp_service_get_dictionary_info, METH_VARARGS, "Get attributes of dictionaries from their id list."},
+  {"addressGeocoding", (PyCFunction)geonlp_service_address_geocoding, METH_VARARGS, "Geocoding the address(es)."},
   {NULL, NULL, 0, NULL} // Sentinel
 };
 
@@ -118,7 +293,7 @@ static void geonlp_ma_dealloc(GeonlpMA *self)
 }
 
 static PyObject * geonlp_ma_parse(GeonlpMA *self, PyObject *args)
-// Parse the string
+// Parse the sentence and return a formatted text
 {
   char* str;
 
@@ -131,9 +306,37 @@ static PyObject * geonlp_ma_parse(GeonlpMA *self, PyObject *args)
   return Py_BuildValue("s", result.c_str(), 1);
 }
 
+static PyObject * geonlp_ma_parse_node(GeonlpMA *self, PyObject *args)
+// Parse the sentence and return list of objects
+{
+  char* str;
+
+  if (!PyArg_ParseTuple(args, "s", &str)) {
+    return NULL;
+  }
+
+  std::vector<geonlp::Node> ret;
+  try {
+    Py_ssize_t n = (Py_ssize_t) (self->_ptrObj)->parseNode(str, ret);
+    PyObject *pylist = PyList_New(n);
+
+    for (Py_ssize_t i = 0; i < n; i++) {
+      picojson::object pico_obj = ret[i].toObject();
+      picojson::value v(pico_obj);
+      PyList_SetItem(pylist, i, picojson_to_pyobject(v));
+    }
+
+    return pylist;
+  } catch (std::exception & e) {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+  }
+  return NULL;
+}
+
 // GeonlpMA object methods
 static PyMethodDef GeonlpMAMethods[] = {
-  {"parse", (PyCFunction)geonlp_ma_parse, METH_VARARGS, "Parse the string"},
+  {"parse", (PyCFunction)geonlp_ma_parse, METH_VARARGS, "Parse the sentence and return a formatted text."},
+  {"parseNode", (PyCFunction)geonlp_ma_parse_node, METH_VARARGS, "Parse the sentece and return list of dict."},
   {NULL, NULL, 0, NULL} // Sentinel
 };
 

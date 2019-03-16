@@ -10,7 +10,7 @@ module1 = Extension(
     include_dirs=['/usr/include', '../../include'],
     libraries=['geonlp', 'mecab', 'sqlite3'],
     library_dirs=['/usr/lib', '/usr/local/lib'],
-    sources=['pygeonlp.cpp']
+    sources=['pygeonlp.cpp', 'py2pico.cpp']
 )
 
 setup(

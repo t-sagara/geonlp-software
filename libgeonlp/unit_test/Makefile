@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -g -DPROFILE_DEFAULT_DIR_PATH=\"/usr/local/etc\" -DPACKAGE_NAME=\"geonlp\" -I../../include -I/usr/include/gdal
+CXXFLAGS = -g -DPROFILE_DEFAULT_DIR_PATH=\"/usr/local/etc\" -DPACKAGE_NAME=\"geonlp\" -I../../include
 #CXXFLAGS = -g -DHAVE_LIBDAMS -DPROFILE_DEFAULT_DIR_PATH=\"/usr/local/etc\" -I../../include
 #CXXFLAGS = -g -DDEBUG -DHAVE_LIBDAMS -DPROFILE_DEFAULT_DIR_PATH=\"/usr/local/etc\" -I../../include
 #CXXFLAGS = -pg -DPROFILE_DEFAULT_DIR_PATH=\"/usr/local/etc\" -I../../include

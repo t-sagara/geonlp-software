@@ -285,9 +285,9 @@ function geonlp_util_add($args) {
             if (!array_key_exists($pattern, $installed)) {
                 $installed[$pattern] = array();
             }
-            if (preg_match('!^/.*/$!', $pattern)) {
+            if (@preg_match('!^/.*/$!', $pattern)) {
                 // 正規表現で指定されている
-                if (@preg_match($pattern, $dicname)) {
+                if (preg_match($pattern, $dicname)) {
                     $local->install($dic);
                     $installed[$pattern] []= $dicname;
                     break;

@@ -162,9 +162,11 @@ namespace geonlp
 	}
       } else if (method == "parse") {
 	result = this->parse(params);
+	/*
 	if (this->_options._get_bool("geojson")) {
 	  result = convertToGeoJSON(result);
 	}
+	*/
       } else if (method == "parseStructured") {
 	result = this->parseStructured(params);
       } else if (method == "search") {
@@ -433,14 +435,6 @@ namespace geonlp
     }
 
     // Version 1.1.1 の機能
-    if (op.has_key("geo-contains")) {
-      this->_options.set_value("geo-contains", op.get_value("geo-contains"));
-      op.erase("geo-contains");
-    }
-    if (op.has_key("geo-disjoint")) {
-      this->_options.set_value("geo-disjoint", op.get_value("geo-disjoint"));
-      op.erase("geo-disjoint");
-    }
     if (op.has_key("time-exists")) {
       this->_options.set_value("time-exists", op.get_value("time-exists"));
       op.erase("time-exists");
@@ -727,6 +721,9 @@ namespace geonlp
     if (params[0].is<std::string>()) {
       // 単文のジオパース処理
       result = this->parse_sentence(params[0].get<std::string>());
+      if (this->_options._get_bool("geojson")) {
+	result = convertToGeoJSON(result);
+      }
     } else if (params[0].is<picojson::array>()) {
       // 複数文のジオパース処理
       picojson::array rarray;

@@ -96,6 +96,11 @@ namespace geonlp {
       spatial_str = prop.get<std::string>("spatial", "");
       boost::split(spatial, spatial_str, boost::is_any_of("|"));
 
+      // non_geoword
+      non_geoword.clear();
+      non_geoword_str = prop.get<std::string>("non_geoword", "");
+      boost::split(non_geoword, non_geoword_str, boost::is_any_of("|"));
+
       // dictionary
       dictionary.clear();
       dictionary_str = prop.get<std::string>("dictionary", "");

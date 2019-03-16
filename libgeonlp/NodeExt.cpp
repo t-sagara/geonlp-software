@@ -7,6 +7,7 @@
 ///
 #include <sstream>
 #include <vector>
+#include <iostream>
 #include "NodeExt.h"
 #include "Suffix.h"
 
@@ -126,6 +127,14 @@ namespace geonlp
 	if ( 0 == feature.compare( 0, it->length(), *it)){
 	  bSingle = false;
 	  break;
+	}
+      }
+      if (bSingle) { // ブラックリストの地名語は単独で地名語にならない
+	for (std::vector<std::string>::const_iterator it = phbsdef.non_geowords.begin(); it != phbsdef.non_geowords.end(); it++) {
+	  if (0 == surface.compare(0, it->length(), *it)) {
+	    bSingle = false;
+	    break;
+	  }
 	}
       }
     }

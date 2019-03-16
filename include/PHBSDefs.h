@@ -30,6 +30,10 @@ namespace geonlp
     /// @brief 地名語に続く単語集合
     /// プロファイルから読み込み
     std::vector<std::string> spatials;
+    
+    /// @brief 地名語にならない単語集合
+    /// プロファイルから読み込み
+    std::vector<std::string> non_geowords;
 		
     /// @brief 地名語の先頭となり得る品詞集合
     std::vector<std::string> heads;

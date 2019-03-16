@@ -74,6 +74,7 @@ namespace geonlp
 	void PHBSDefs::readProfile(const Profile& profile) {
 		suffixes = profile.get_suffix();
 		spatials = profile.get_spatial();
+		non_geowords = profile.get_non_geoword();
 	}
 }
 
