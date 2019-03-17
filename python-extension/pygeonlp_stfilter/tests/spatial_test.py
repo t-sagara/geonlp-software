@@ -3,7 +3,7 @@
 import pygeonlp
 from osgeo import ogr
 import json
-from pygeonlp_filter import spatial
+from pygeonlp_stfilter import spatial
 import pprint
 import unittest
 

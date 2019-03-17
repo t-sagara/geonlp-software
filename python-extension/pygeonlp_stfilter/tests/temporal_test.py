@@ -1,7 +1,7 @@
 #!python
 # -*- utf-8 -*-
 import pygeonlp
-from pygeonlp_filter import temporal
+from pygeonlp_stfilter import temporal
 import json
 import unittest
 

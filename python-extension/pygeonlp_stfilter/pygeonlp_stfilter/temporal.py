@@ -1,7 +1,7 @@
 import json
 import datetime
 import re
-from pygeonlp_filter import st_filter
+from pygeonlp_stfilter import st_filter
 
 
 def time_exists(geonlp_response, date_from, date_to=None, **kwargs):

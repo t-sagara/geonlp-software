@@ -2,7 +2,7 @@ from osgeo import ogr
 import pygeonlp
 import json
 import urllib.request
-from pygeonlp_filter import st_filter
+from pygeonlp_stfilter import st_filter
 
 
 def _get_geometry_from_geojson_url(url):
