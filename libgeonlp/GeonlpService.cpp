@@ -163,9 +163,9 @@ namespace geonlp
       } else if (method == "parse") {
 	result = this->parse(params);
 	/*
-	if (this->_options._get_bool("geojson")) {
+	  if (this->_options._get_bool("geojson")) {
 	  result = convertToGeoJSON(result);
-	}
+	  }
 	*/
       } else if (method == "parseStructured") {
 	result = this->parseStructured(params);
@@ -506,9 +506,9 @@ namespace geonlp
     return this->dequeue_sentence();
   }
 
-  /// 一文をジオパース処理後、コンテキストキューに積む
-  /// コンテキスト、オプションはクラスの状態のまま
-  void Service::queue_sentence(const std::string& sentence) {
+  /// １文を現在のオプションで解析する
+  /// 住所ジオコーディングを含む、曖昧解決は行わない
+  picojson::array Service::analyze_sentence(const std::string& sentence) {
     double probability;
     picojson::ext result;
     picojson::value null;
@@ -516,6 +516,7 @@ namespace geonlp
     this->_ma_ptr->parseNode(sentence, nodes);
     picojson::array varray;
     std::string nog_sentence = "";
+    picojson::array tmp_nodes;
     std::vector<Node>::iterator pre_node = nodes.end();
 
     for (std::vector<Node>::iterator it = nodes.begin();
@@ -529,6 +530,7 @@ namespace geonlp
       // 地名修飾語のチェック
       if (!this->_options._get_bool("adjunct") && node.get_conjugatedForm() == "名詞-固有名詞-地名修飾語") {
 	nog_sentence += surface;
+	tmp_nodes.push_back(picojson::value(node.toObject()));
 	continue;
       }
       
@@ -537,6 +539,8 @@ namespace geonlp
 	std::vector<Node>::iterator next_node = it + 1;
 	if ((*next_node).get_conjugatedForm() == "名詞-固有名詞-人名-名" || ((*next_node).get_partOfSpeech() == "名詞" && (*next_node).get_subclassification1() == "固有名詞" && (*next_node).get_subclassification2() == "人名")) {
 	  nog_sentence += surface + next_node->get_surface();
+	  tmp_nodes.push_back(picojson::value(node.toObject()));
+	  tmp_nodes.push_back(picojson::value(next_node->toObject()));
 	  it++;
 	  continue;
 	}
@@ -546,6 +550,8 @@ namespace geonlp
 	std::vector<Node>::iterator next_node = it + 1;
 	if ((*next_node).get_partOfSpeech() == "名詞" && (*next_node).get_subclassification1() == "接尾" && (*next_node).get_subclassification2() == "人名") {
 	  nog_sentence += surface + next_node->get_surface();
+	  tmp_nodes.push_back(picojson::value(node.toObject()));
+	  tmp_nodes.push_back(picojson::value(next_node->toObject()));
 	  it++;
 	  continue;
 	}
@@ -556,6 +562,9 @@ namespace geonlp
 	std::vector<Node>::iterator nnext_node = it + 2;
 	if ((*nnext_node).get_partOfSpeech() == "名詞" && (*nnext_node).get_subclassification1() == "接尾" && (*nnext_node).get_subclassification2() == "人名" && (*next_node).get_partOfSpeech() == "名詞") {
 	  nog_sentence += surface + next_node->get_surface() + nnext_node->get_surface();
+	  tmp_nodes.push_back(picojson::value(node.toObject()));
+	  tmp_nodes.push_back(picojson::value(next_node->toObject()));
+	  tmp_nodes.push_back(picojson::value(nnext_node->toObject()));
 	  it += 2;
 	  continue;
 	}
@@ -570,6 +579,7 @@ namespace geonlp
 	  new_surface += s;
 	  if (s == "年" || s == "年度" || s == "年代" || s == "元年" || (*it_era).get_partOfSpeech() == "記号") {
 	    nog_sentence += new_surface;
+	    tmp_nodes.push_back(picojson::value(it_era->toObject()));
 	    it = it_era;
 	    is_era = true;
 	    break;
@@ -587,10 +597,10 @@ namespace geonlp
 
       // 一般名詞に続く語は地名ではない
       /*
-      if (pre_node != nodes.end() && pre_node->get_partOfSpeech() == "名詞") {
+	if (pre_node != nodes.end() && pre_node->get_partOfSpeech() == "名詞") {
 	nog_sentence += surface;
 	continue;
-      }
+	}
       */
 
       // 地名語の処理
@@ -601,8 +611,10 @@ namespace geonlp
 	  
 	if (nog_sentence.length() > 0) {
 	  v.set_value("surface", nog_sentence);
+	  v.set_value("nodes", picojson::value(tmp_nodes));
 	  varray.push_back((picojson::value)v);
 	  nog_sentence = "";
+	  tmp_nodes.clear();
 	}
 
 #ifdef HAVE_LIBDAMS
@@ -635,6 +647,21 @@ namespace geonlp
 	      v.initByJson("{}");
 	      v.set_value("surface", surface);
 	      v.set_value("address-candidates", (picojson::value)varray_addresses);
+	      picojson::ext address_node;
+	      address_node.initByJson("{}");
+	      address_node.set_value("surface", std::string(surface));
+	      address_node.set_value("original_form", surface);
+	      address_node.set_value("pos", "名詞");
+	      address_node.set_value("subclass1", "固有名詞");
+	      address_node.set_value("subclass2", "住所表記");
+	      address_node.set_value("subclass3", "");
+	      address_node.set_value("conjugation_type", "*");
+	      address_node.set_value("cojugated_form", "*");
+	      address_node.set_value("yomi", "");
+	      address_node.set_value("prononciation", "");
+	      picojson::array pico_ary;
+	      pico_ary.push_back(picojson::value(address_node));
+	      v.set_value("nodes", picojson::value(pico_ary));
 	      varray.push_back((picojson::value)v);
 	      continue;
 	    } else {
@@ -649,6 +676,9 @@ namespace geonlp
 	// Geoword& geoword = (*it_geoword).second;
 	v.initByJson("{}");
 	v.set_value("surface", surface);
+	tmp_nodes.push_back(picojson::value(node.toObject()));
+	v.set_value("nodes", picojson::value(tmp_nodes));
+	tmp_nodes.clear();
 	// v.set_value("geo", ((picojson::value)geoword.getGeoObject()));
 	{ // map::<string, Geoword> を picojson::array に積み替え
 	  picojson::array varray_geowords;
@@ -661,19 +691,28 @@ namespace geonlp
 	varray.push_back((picojson::value)v);
       } else {
 	nog_sentence += surface;
+	tmp_nodes.push_back(picojson::value(node.toObject()));
       }
     }
     if (nog_sentence.length() > 0) {
       picojson::ext v("{}");
       v.set_value("surface", nog_sentence);
+      v.set_value("nodes", picojson::value(tmp_nodes));
       varray.push_back((picojson::value)v);
       nog_sentence = "";
+      tmp_nodes.clear();
     }
 
     // センテンスのエンドマーク
     picojson::ext e("null");
     varray.push_back((picojson::value)e);
+    return varray;
+  }
 
+  /// 一文をジオパース処理後、コンテキストキューに積む
+  /// コンテキスト、オプションはクラスの状態のまま
+  void Service::queue_sentence(const std::string& sentence) {
+    picojson::array varray = this->analyze_sentence(sentence);
     this->_context.addNodes(varray);
     return;
   }
@@ -791,6 +830,34 @@ namespace geonlp
     return result;
   }
 
+  /// 文解析
+  picojson::value Service::analyze(const picojson::array& params)
+    throw (picojson::PicojsonException, ServiceRequestFormatException) {
+    picojson::value options, result;
+
+    // オプションクリア
+    this->reset_options();
+
+    // パラメータ数チェック
+    if (params.size() == 1) {
+      ;
+    } else if (params.size() == 2) {
+      // オプションセット
+      this->set_options(params[1]);
+    } else {
+      throw ServiceRequestFormatException("geonlp.parse accepts 1 or 2 parameters.");
+    }
+
+    // パラメータ解析
+    if (params[0].is<std::string>()) {
+      // 単文のジオパース処理
+      result = picojson::value(this->analyze_sentence(params[0].get<std::string>()));
+    } else {
+      throw ServiceRequestFormatException("The 1st parameter of geonlp.analyze accept() must be a string.");
+    }
+    return result;
+  }
+
   /// 地名語検索
   picojson::value Service::search(const picojson::array& params)
     throw (picojson::PicojsonException, ServiceRequestFormatException) {
@@ -857,7 +924,7 @@ namespace geonlp
 	}
       }
     } else {
-	  throw ServiceRequestFormatException("The 1st parameter of geonlp.getGeoInfo must be a string or an array of string.");
+      throw ServiceRequestFormatException("The 1st parameter of geonlp.getGeoInfo must be a string or an array of string.");
     }
     return result;
   }

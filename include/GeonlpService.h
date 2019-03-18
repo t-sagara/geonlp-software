@@ -62,10 +62,17 @@ namespace geonlp
     /// @return なし
     void reset_context(void) { this->_context.clear(); }
     
-    /// @brief １文を現在のコンテキスト、オプションのままで解析する
+    /// @brief  １文を現在のコンテキスト、オプションのままで解析し、
+    ///         曖昧解決まで実行する
     /// @arg @c sentence  解析する自然言語文
     /// @return 解析結果の JSON オブジェクトの配列
     picojson::value parse_sentence(const std::string& sentence);
+
+    /// @brief  １文を現在のオプションで解析する
+    ///         住所ジオコーディングを含む、曖昧解決は行わない
+    /// @arg @c sentence  解析する自然言語文
+    /// @return 解析結果の JSON オブジェクトの配列
+    picojson::array analyze_sentence(const std::string& sentence);
 
     /// @brief １文をキューに積む
     /// @arg @c sentence  解析する自然言語文
@@ -147,6 +154,13 @@ namespace geonlp
     /// @exception PicojsonException  json 解析処理時のエラー
     /// @exception ServiceRequestFormatException  リクエストフォーマットの不正
     picojson::value parseStructured(const picojson::array& params)
+      throw (picojson::PicojsonException, ServiceRequestFormatException);
+
+    /// @brief  １文を現在のオプションで解析する
+    ///         住所ジオコーディングを含む、曖昧解決は行わない
+    /// @arg @c sentence  解析する自然言語文
+    /// @return 解析結果の JSON オブジェクトの配列
+    picojson::value analyze(const picojson::array& params)
       throw (picojson::PicojsonException, ServiceRequestFormatException);
 
     /// @brief 表記または読みから地名語を検索する

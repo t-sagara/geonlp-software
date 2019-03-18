@@ -65,6 +65,22 @@ namespace geonlp
     /// @arg @c feature MeCab::Nodeの持つfeature。CSV で表記された素性情報。
     Node( const std::string& surface, const std::string& feature);
 
+    /// コピーコンストラクタ
+    Node(const Node& n) {
+      this->surface = n.surface;
+      this->feature = n.feature;
+      this->partOfSpeech = n.partOfSpeech;
+      this->subclassification1 = n.subclassification1;
+      this->subclassification2 = n.subclassification2;
+      this->subclassification3 = n.subclassification3;
+      this->conjugatedForm = n.conjugatedForm;
+      this->conjugationType = n.conjugationType;
+      this->originalForm = n.originalForm;
+      this->yomi = n.yomi;
+      this->pronunciation = n.pronunciation;
+    }
+
+
     /// 形態素の文字列情報(表層形)を得る。
     inline const std::string get_surface() const;
 

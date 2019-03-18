@@ -237,6 +237,30 @@ static PyObject * geonlp_service_address_geocoding(GeonlpService *self, PyObject
   return NULL;
 }
 
+static PyObject * geonlp_service_analyze_sentence(GeonlpService *self, PyObject *args)
+// Analyze the sentence
+{
+  char *param1 = NULL;
+  PyObject *param2 = NULL;
+  picojson::array pico_ary;
+
+  if (!PyArg_ParseTuple(args, "s|O", &param1, &param2)) {
+    return NULL;
+  }
+
+  pico_ary.push_back(picojson::value(std::string(param1)));
+  if (param2) {
+    pico_ary.push_back(pyobject_to_picojson(param2));
+  }
+
+  try {
+    picojson::value result = (self->_ptrObj)->analyze(pico_ary);
+    return picojson_to_pyobject(result);
+  } catch (geonlp::ServiceRequestFormatException e) {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+  }
+  return NULL;
+}
 
 // GeonlpService object methods
 static PyMethodDef GeonlpServiceMethods[] = {
@@ -249,6 +273,7 @@ static PyMethodDef GeonlpServiceMethods[] = {
   {"getDictionaries", (PyCFunction)geonlp_service_get_dictionaries, METH_VARARGS, "Get list of the available dictionaries."},
   {"getDictionaryInfo", (PyCFunction)geonlp_service_get_dictionary_info, METH_VARARGS, "Get attributes of dictionaries from their id list."},
   {"addressGeocoding", (PyCFunction)geonlp_service_address_geocoding, METH_VARARGS, "Geocoding the address(es)."},
+  {"analyze", (PyCFunction)geonlp_service_analyze_sentence, METH_VARARGS, "Analyze a sentence into a list of word information."},
   {NULL, NULL, 0, NULL} // Sentinel
 };
 
