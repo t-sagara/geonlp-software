@@ -416,7 +416,7 @@ function geonlp_util_forceprefix($args) {
                 }
             } else { // 完全一致
                 if (\strtolower($pattern) == \strtolower($dicname)) {
-                    $local->force_prefix($dic, $args[1]);
+                    $local->force_prefix($dic, $args['params'][1]);
                     $forced[$pattern] []= $dicname;
                 }
             }

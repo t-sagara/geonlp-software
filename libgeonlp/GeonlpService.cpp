@@ -169,6 +169,8 @@ namespace geonlp
 	*/
       } else if (method == "parseStructured") {
 	result = this->parseStructured(params);
+      } else if (method == "analyze") {
+	result = this->analyze(params);
       } else if (method == "search") {
 	result = this->search(params);
       } else if (method == "getGeoInfo") {
