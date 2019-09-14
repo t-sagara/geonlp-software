@@ -892,10 +892,13 @@ namespace geonlp
     ret.clear();
     if (node.get_subclassification2() != "地名語") return 0;
 
+    std::string subclass3 = node.get_subclassification3();
+
     boost::regex pattern = boost::regex("([^\\/:]+):([^\\/:]*)", boost::regex_constants::egrep);
-    for (boost::sregex_iterator it = boost::make_regex_iterator(node.get_subclassification3(), pattern); it != boost::sregex_iterator(); it++) {
+    for (boost::sregex_iterator it = boost::make_regex_iterator(subclass3, pattern); it != boost::sregex_iterator(); it++) {
       std::string geonlp_id = (*it)[1]; // geonlp_id
-      // (*it)[2]; // typical name
+      // std::string typical_name = (*it)[2]; // typical name
+      // std::cerr << "geonlp_id:'" << geonlp_id << "', name:'" << typical_name << "'" << std::endl;
       Geoword geoword;
       if (this->getGeowordEntry(geonlp_id, geoword))
 	ret.insert(std::make_pair(geonlp_id, geoword));
